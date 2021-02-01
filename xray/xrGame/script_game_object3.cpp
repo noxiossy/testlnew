@@ -38,7 +38,6 @@
 #include "sound_player.h"
 #include "stalker_decision_space.h"
 #include "space_restriction_manager.h"
-#include "sight_manager_space.h"
 
 namespace MemorySpace {
 	struct CVisibleObject;
