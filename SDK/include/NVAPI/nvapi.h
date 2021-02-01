@@ -71,8 +71,6 @@ typedef unsigned long    NvU32;
 typedef long             NvS32;
 typedef unsigned char    NvU8;
 
-#define DECLARE_HANDLE(name) struct name##__ { int unused; }; typedef struct name##__ *name
-
 // NVAPI Handles - These handles are retrieved from various calls and passed in to others in NvAPI
 //                 These are meant to be opaque types.  Do not assume they correspond to indices, HDCs,
 //                 display indexes or anything else.
