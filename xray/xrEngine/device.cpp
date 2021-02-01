@@ -10,11 +10,12 @@
 #define MMNOJOY
 #include <mmsystem.h>
 // d3dx9.h
-#include <d3dx9.h>
+#include <d3dx/d3dx9.h>
 #pragma warning(default:4995)
 
 #include "x_ray.h"
 #include "render.h"
+#include "IGame_Persistent.h"
 
 // must be defined before include of FS_impl.h
 #define INCLUDE_FROM_ENGINE
@@ -26,7 +27,6 @@
 #endif // #ifdef INGAME_EDITOR
 
 #include "xrSash.h"
-#include "igame_persistent.h"
 
 ENGINE_API CRenderDevice Device;
 ENGINE_API CLoadScreenRenderer load_screen_renderer;
@@ -489,7 +489,6 @@ void ProcessLoading				(RP_FUNC *f)
 }
 
 ENGINE_API BOOL bShowPauseString = TRUE;
-#include "IGame_Persistent.h"
 
 void CRenderDevice::Pause(BOOL bOn, BOOL bTimer, BOOL bSound, LPCSTR reason)
 {

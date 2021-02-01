@@ -3,11 +3,11 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
-#pragma hdrstop
-
+#pragma warning(push)
 #pragma warning(disable:4995)
-#include <d3dx9.h>
+#include <d3dx/d3dx9.h>
 #pragma warning(default:4995)
+#pragma warning(pop)
 
 #include "../../xrEngine/fmesh.h"
 #include "../../xrCPU_Pipe/xrCPU_Pipe.h"
@@ -1049,7 +1049,7 @@ case RM_SKINNING_4B:	result = _PickBoneHW4W	(r,dist,start,dir,V,indices+iBase,*f
 default: NODEFAULT;
 	}
 	CHK_DX				(V->p_rm_Indices->Unlock());
-#endif	USE_DX10
+#endif	//USE_DX10
 
 	return result;
 }
