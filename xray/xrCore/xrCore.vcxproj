@@ -86,7 +86,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <BrowseInformation />
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4456;4459</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4456;4459;4702;</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <MapFileName />
@@ -124,7 +124,7 @@
       <BrowseInformation />
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <DisableSpecificWarnings>4456;4459;4595</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4456;4459;4595;4702;</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>..\..\sdk\libraries;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -165,6 +165,7 @@
       <ProgramDataBaseFileName>$(IntDir)</ProgramDataBaseFileName>
       <BrowseInformation />
       <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4456;4459;4702;</DisableSpecificWarnings>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
