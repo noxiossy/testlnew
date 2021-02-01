@@ -88,6 +88,7 @@ static class cl_sun_shafts_intensity : public R_constant_setup
 }	binder_sun_shafts_intensity;
 
 extern ENGINE_API BOOL r2_sun_static;
+extern ENGINE_API BOOL r2_simple_static;
 extern ENGINE_API BOOL r2_advanced_pp;	//	advanced post process and effects
 //////////////////////////////////////////////////////////////////////////
 // Just two static storage
@@ -236,6 +237,7 @@ void					CRender::create					()
 	o.sunfilter			= (strstr(Core.Params,"-sunfilter"))?	TRUE	:FALSE	;
 	//.	o.sunstatic			= (strstr(Core.Params,"-sunstatic"))?	TRUE	:FALSE	;
 	o.sunstatic			= r2_sun_static;
+	o.simplestatic		= r2_simple_static;
 	o.advancedpp		= r2_advanced_pp;
 	o.sjitter			= (strstr(Core.Params,"-sjitter"))?		TRUE	:FALSE	;
 	o.depth16			= (strstr(Core.Params,"-depth16"))?		TRUE	:FALSE	;
@@ -774,6 +776,13 @@ HRESULT	CRender::shader_compile			(
 		def_it						++	;
 	}
 	sh_name[len]='0'+char(o.sunstatic); ++len;
+
+	if (o.simplestatic)		{
+		defines[def_it].Name		=	"USE_R2_SIMPLE_STATIC";
+		defines[def_it].Definition	=	"1";
+		def_it						++	;
+	}
+	sh_name[len]='0'+char(o.simplestatic); ++len;
 
 	if (o.forcegloss)		{
 		xr_sprintf						(c_gloss,"%f",o.forcegloss_v);

@@ -68,6 +68,7 @@ public:
 
 		u32		sunfilter			: 1;
 		u32		sunstatic			: 1;
+		u32		simplestatic		: 1;
 		u32		sjitter				: 1;
 		u32		noshadows			: 1;
 		u32		Tshadows			: 1;						// transluent shadows
@@ -218,6 +219,7 @@ public:
 	virtual	GenerationLevel			get_generation			()	{ return IRender_interface::GENERATION_R2; }
 
 	virtual bool					is_sun_static			()	{ return o.sunstatic;}
+	virtual bool					is_simple_static		()	{ return o.simplestatic;}
 	virtual DWORD					get_dx_level			()	{ return 0x00090000;}
 
 	// Loading / Unloading
