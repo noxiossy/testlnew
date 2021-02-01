@@ -14,6 +14,7 @@
 #include "../xrEngine/SkeletonMotions.h"
 #include "player_hud.h"
 #include "ActorEffector.h"
+#include <iterator>
 
 #define KNIFE_MATERIAL_NAME "objects\\knife"
 
@@ -350,38 +351,38 @@ void CWeaponKnife::LoadFireParams(LPCSTR section)
 	s_sHitPower_2			= pSettings->r_string_wb	(section, "hit_power_2" );
 	s_sHitPowerCritical_2	= pSettings->r_string_wb	(section, "hit_power_critical_2" );
 	
-	fvHitPower_2[egdMaster]			= (float)atof(_GetItem(*s_sHitPower_2,0,buffer));//ïåðâûé ïàðàìåòð - ýòî õèò äëÿ óðîâíÿ èãðû ìàñòåð
-	fvHitPowerCritical_2[egdMaster]	= (float)atof(_GetItem(*s_sHitPowerCritical_2,0,buffer));//ïåðâûé ïàðàìåòð - ýòî õèò äëÿ óðîâíÿ èãðû ìàñòåð
+	fvHitPower_2[egdMaster]			= (float)atof(_GetItem(*s_sHitPower_2,0,buffer));//Ã¯Ã¥Ã°Ã¢Ã»Ã© Ã¯Ã Ã°Ã Ã¬Ã¥Ã²Ã° - Ã½Ã²Ã® ÃµÃ¨Ã² Ã¤Ã«Ã¿ Ã³Ã°Ã®Ã¢Ã­Ã¿ Ã¨Ã£Ã°Ã» Ã¬Ã Ã±Ã²Ã¥Ã°
+	fvHitPowerCritical_2[egdMaster]	= (float)atof(_GetItem(*s_sHitPowerCritical_2,0,buffer));//Ã¯Ã¥Ã°Ã¢Ã»Ã© Ã¯Ã Ã°Ã Ã¬Ã¥Ã²Ã° - Ã½Ã²Ã® ÃµÃ¨Ã² Ã¤Ã«Ã¿ Ã³Ã°Ã®Ã¢Ã­Ã¿ Ã¨Ã£Ã°Ã» Ã¬Ã Ã±Ã²Ã¥Ã°
 
-	fvHitPower_2[egdNovice] = fvHitPower_2[egdStalker] = fvHitPower_2[egdVeteran] = fvHitPower_2[egdMaster];//èçíà÷àëüíî ïàðàìåòðû äëÿ äðóãèõ óðîâíåé ñëîæíîñòè òàêèå æå
-	fvHitPowerCritical_2[egdNovice] = fvHitPowerCritical_2[egdStalker] = fvHitPowerCritical_2[egdVeteran] = fvHitPowerCritical_2[egdMaster];//èçíà÷àëüíî ïàðàìåòðû äëÿ äðóãèõ óðîâíåé ñëîæíîñòè òàêèå æå
+	fvHitPower_2[egdNovice] = fvHitPower_2[egdStalker] = fvHitPower_2[egdVeteran] = fvHitPower_2[egdMaster];//Ã¨Ã§Ã­Ã Ã·Ã Ã«Ã¼Ã­Ã® Ã¯Ã Ã°Ã Ã¬Ã¥Ã²Ã°Ã» Ã¤Ã«Ã¿ Ã¤Ã°Ã³Ã£Ã¨Ãµ Ã³Ã°Ã®Ã¢Ã­Ã¥Ã© Ã±Ã«Ã®Ã¦Ã­Ã®Ã±Ã²Ã¨ Ã²Ã ÃªÃ¨Ã¥ Ã¦Ã¥
+	fvHitPowerCritical_2[egdNovice] = fvHitPowerCritical_2[egdStalker] = fvHitPowerCritical_2[egdVeteran] = fvHitPowerCritical_2[egdMaster];//Ã¨Ã§Ã­Ã Ã·Ã Ã«Ã¼Ã­Ã® Ã¯Ã Ã°Ã Ã¬Ã¥Ã²Ã°Ã» Ã¤Ã«Ã¿ Ã¤Ã°Ã³Ã£Ã¨Ãµ Ã³Ã°Ã®Ã¢Ã­Ã¥Ã© Ã±Ã«Ã®Ã¦Ã­Ã®Ã±Ã²Ã¨ Ã²Ã ÃªÃ¨Ã¥ Ã¦Ã¥
 
-	int num_game_diff_param=_GetItemCount(*s_sHitPower_2);//óçíà¸ì êîëëè÷åñòâî ïàðàìåòðîâ äëÿ õèòîâ
-	if (num_game_diff_param>1)//åñëè çàäàí âòîðîé ïàðàìåòð õèòà
+	int num_game_diff_param=_GetItemCount(*s_sHitPower_2);//Ã³Ã§Ã­Ã Â¸Ã¬ ÃªÃ®Ã«Ã«Ã¨Ã·Ã¥Ã±Ã²Ã¢Ã® Ã¯Ã Ã°Ã Ã¬Ã¥Ã²Ã°Ã®Ã¢ Ã¤Ã«Ã¿ ÃµÃ¨Ã²Ã®Ã¢
+	if (num_game_diff_param>1)//Ã¥Ã±Ã«Ã¨ Ã§Ã Ã¤Ã Ã­ Ã¢Ã²Ã®Ã°Ã®Ã© Ã¯Ã Ã°Ã Ã¬Ã¥Ã²Ã° ÃµÃ¨Ã²Ã 
 	{
-		fvHitPower_2[egdVeteran] = (float)atof(_GetItem(*s_sHitPower_2,1,buffer));//òî âû÷èòûâàåì åãî äëÿ óðîâíÿ âåòåðàíà
+		fvHitPower_2[egdVeteran] = (float)atof(_GetItem(*s_sHitPower_2,1,buffer));//Ã²Ã® Ã¢Ã»Ã·Ã¨Ã²Ã»Ã¢Ã Ã¥Ã¬ Ã¥Ã£Ã® Ã¤Ã«Ã¿ Ã³Ã°Ã®Ã¢Ã­Ã¿ Ã¢Ã¥Ã²Ã¥Ã°Ã Ã­Ã 
 	}
-	if (num_game_diff_param>2)//åñëè çàäàí òðåòèé ïàðàìåòð õèòà
+	if (num_game_diff_param>2)//Ã¥Ã±Ã«Ã¨ Ã§Ã Ã¤Ã Ã­ Ã²Ã°Ã¥Ã²Ã¨Ã© Ã¯Ã Ã°Ã Ã¬Ã¥Ã²Ã° ÃµÃ¨Ã²Ã 
 	{
-		fvHitPower_2[egdStalker] = (float)atof(_GetItem(*s_sHitPower_2,2,buffer));//òî âû÷èòûâàåì åãî äëÿ óðîâíÿ ñòàëêåðà
+		fvHitPower_2[egdStalker] = (float)atof(_GetItem(*s_sHitPower_2,2,buffer));//Ã²Ã® Ã¢Ã»Ã·Ã¨Ã²Ã»Ã¢Ã Ã¥Ã¬ Ã¥Ã£Ã® Ã¤Ã«Ã¿ Ã³Ã°Ã®Ã¢Ã­Ã¿ Ã±Ã²Ã Ã«ÃªÃ¥Ã°Ã 
 	}
-	if (num_game_diff_param>3)//åñëè çàäàí ÷åòâ¸ðòûé ïàðàìåòð õèòà
+	if (num_game_diff_param>3)//Ã¥Ã±Ã«Ã¨ Ã§Ã Ã¤Ã Ã­ Ã·Ã¥Ã²Ã¢Â¸Ã°Ã²Ã»Ã© Ã¯Ã Ã°Ã Ã¬Ã¥Ã²Ã° ÃµÃ¨Ã²Ã 
 	{
-		fvHitPower_2[egdNovice]  = (float)atof(_GetItem(*s_sHitPower_2,3,buffer));//òî âû÷èòûâàåì åãî äëÿ óðîâíÿ íîâè÷êà
+		fvHitPower_2[egdNovice]  = (float)atof(_GetItem(*s_sHitPower_2,3,buffer));//Ã²Ã® Ã¢Ã»Ã·Ã¨Ã²Ã»Ã¢Ã Ã¥Ã¬ Ã¥Ã£Ã® Ã¤Ã«Ã¿ Ã³Ã°Ã®Ã¢Ã­Ã¿ Ã­Ã®Ã¢Ã¨Ã·ÃªÃ 
 	}
 
-	num_game_diff_param=_GetItemCount(*s_sHitPowerCritical_2);//óçíà¸ì êîëëè÷åñòâî ïàðàìåòðîâ
-	if (num_game_diff_param>1)//åñëè çàäàí âòîðîé ïàðàìåòð õèòà
+	num_game_diff_param=_GetItemCount(*s_sHitPowerCritical_2);//Ã³Ã§Ã­Ã Â¸Ã¬ ÃªÃ®Ã«Ã«Ã¨Ã·Ã¥Ã±Ã²Ã¢Ã® Ã¯Ã Ã°Ã Ã¬Ã¥Ã²Ã°Ã®Ã¢
+	if (num_game_diff_param>1)//Ã¥Ã±Ã«Ã¨ Ã§Ã Ã¤Ã Ã­ Ã¢Ã²Ã®Ã°Ã®Ã© Ã¯Ã Ã°Ã Ã¬Ã¥Ã²Ã° ÃµÃ¨Ã²Ã 
 	{
-		fvHitPowerCritical_2[egdVeteran] = (float)atof(_GetItem(*s_sHitPowerCritical_2,1,buffer));//òî âû÷èòûâàåì åãî äëÿ óðîâíÿ âåòåðàíà
+		fvHitPowerCritical_2[egdVeteran] = (float)atof(_GetItem(*s_sHitPowerCritical_2,1,buffer));//Ã²Ã® Ã¢Ã»Ã·Ã¨Ã²Ã»Ã¢Ã Ã¥Ã¬ Ã¥Ã£Ã® Ã¤Ã«Ã¿ Ã³Ã°Ã®Ã¢Ã­Ã¿ Ã¢Ã¥Ã²Ã¥Ã°Ã Ã­Ã 
 	}
-	if (num_game_diff_param>2)//åñëè çàäàí òðåòèé ïàðàìåòð õèòà
+	if (num_game_diff_param>2)//Ã¥Ã±Ã«Ã¨ Ã§Ã Ã¤Ã Ã­ Ã²Ã°Ã¥Ã²Ã¨Ã© Ã¯Ã Ã°Ã Ã¬Ã¥Ã²Ã° ÃµÃ¨Ã²Ã 
 	{
-		fvHitPowerCritical_2[egdStalker] = (float)atof(_GetItem(*s_sHitPowerCritical_2,2,buffer));//òî âû÷èòûâàåì åãî äëÿ óðîâíÿ ñòàëêåðà
+		fvHitPowerCritical_2[egdStalker] = (float)atof(_GetItem(*s_sHitPowerCritical_2,2,buffer));//Ã²Ã® Ã¢Ã»Ã·Ã¨Ã²Ã»Ã¢Ã Ã¥Ã¬ Ã¥Ã£Ã® Ã¤Ã«Ã¿ Ã³Ã°Ã®Ã¢Ã­Ã¿ Ã±Ã²Ã Ã«ÃªÃ¥Ã°Ã 
 	}
-	if (num_game_diff_param>3)//åñëè çàäàí ÷åòâ¸ðòûé ïàðàìåòð õèòà
+	if (num_game_diff_param>3)//Ã¥Ã±Ã«Ã¨ Ã§Ã Ã¤Ã Ã­ Ã·Ã¥Ã²Ã¢Â¸Ã°Ã²Ã»Ã© Ã¯Ã Ã°Ã Ã¬Ã¥Ã²Ã° ÃµÃ¨Ã²Ã 
 	{
-		fvHitPowerCritical_2[egdNovice]  = (float)atof(_GetItem(*s_sHitPowerCritical_2,3,buffer));//òî âû÷èòûâàåì åãî äëÿ óðîâíÿ íîâè÷êà
+		fvHitPowerCritical_2[egdNovice]  = (float)atof(_GetItem(*s_sHitPowerCritical_2,3,buffer));//Ã²Ã® Ã¢Ã»Ã·Ã¨Ã²Ã»Ã¢Ã Ã¥Ã¬ Ã¥Ã£Ã® Ã¤Ã«Ã¿ Ã³Ã°Ã®Ã¢Ã­Ã¿ Ã­Ã®Ã¢Ã¨Ã·ÃªÃ 
 	}
 
 	fHitImpulse_2		= pSettings->r_float	(section, "hit_impulse_2" );
