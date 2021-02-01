@@ -70,7 +70,7 @@ void CPhysicsShellHolder::net_Destroy()
 	//remove calls
 	CPHSriptReqGObjComparer cmpr(this);
 	Level().ph_commander_scripts().remove_calls(&cmpr);
-	//удалить партиклы из ParticlePlayer
+	//ГіГ¤Г Г«ГЁГІГј ГЇГ Г°ГІГЁГЄГ«Г» ГЁГ§ ParticlePlayer
 	CParticlesPlayer::net_DestroyParticles		();
 	CCharacterPhysicsSupport	*char_support = character_physics_support();
 	if( char_support )
@@ -82,7 +82,7 @@ void CPhysicsShellHolder::net_Destroy()
 	xr_delete									(m_pPhysicsShell);
 }
 
-static enum EEnableState
+enum EEnableState
 {
 	stEnable			=0	,
 	stDisable				,
@@ -356,7 +356,7 @@ void CPhysicsShellHolder::OnChangeVisual()
 void CPhysicsShellHolder::UpdateCL	()
 {
 	inherited::UpdateCL	();
-	//обновить присоединенные партиклы
+	//Г®ГЎГ­Г®ГўГЁГІГј ГЇГ°ГЁГ±Г®ГҐГ¤ГЁГ­ГҐГ­Г­Г»ГҐ ГЇГ Г°ГІГЁГЄГ«Г»
 	UpdateParticles		();
 }
 float CPhysicsShellHolder::EffectiveGravity()
