@@ -65,7 +65,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FloatingPointModel>Fast</FloatingPointModel>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4595</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4267;4456;4595;4996</DisableSpecificWarnings>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
