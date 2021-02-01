@@ -223,7 +223,7 @@ void	CKinematicsAnimated::LL_FadeCycle(u16 part, float falloff, u8 mask_channel 
 		B.set_falloff_state();
 		B.blendFalloff		= falloff;
 		//B.blendAccrue		= B.timeCurrent;
-		if (B.stop_at_end)  B.stop_at_end_callback = FALSE;		// callback не должен приходить!
+		if (B.stop_at_end)  B.stop_at_end_callback = FALSE;		// callback Г­ГҐ Г¤Г®Г«Г¦ГҐГ­ ГЇГ°ГЁГµГ®Г¤ГЁГІГј!
 	}
 }
 void	CKinematicsAnimated::LL_CloseCycle(u16 part, u8 mask_channel /*= (1<<0)*/)
@@ -655,7 +655,7 @@ void CKinematicsAnimated::IBlend_Startup	()
 #endif
 	}
 	// cycles+fx clear
-	for (i=0; i<MAX_PARTS; i++)
+	for (u32 i=0; i<MAX_PARTS; i++)
 		blend_cycles[i].clear();
 	blend_fx.clear		();
 	ChannelFactorsStartup();
