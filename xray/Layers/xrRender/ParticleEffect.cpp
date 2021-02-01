@@ -445,7 +445,7 @@ void ParticleRenderStream( LPVOID lpvParams )
 
 				float r_x		= m.size.x*0.5f;
 				float r_y		= m.size.y*0.5f;
-				float speed;
+				float speed = 0.0f;
 				BOOL speed_calculated = FALSE;
 
 				if (pPE.m_Def->m_Flags.is(CPEDef::dfVelocityScale)){
@@ -760,4 +760,4 @@ void CParticleEffect::Render(float )
 	}
 }
 
-#endif  // _EDITOR
+#endif  // _EDITOR 
