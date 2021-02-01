@@ -232,7 +232,7 @@ void CPhysicsShellHolder::activate_physic_shell()
 	smart_cast<IKinematics*>(Visual())->CalculateBones(TRUE);
 	if(!IsGameTypeSingle())
 	{
-		if(!smart_cast<CCustomRocket*>(this)&&!smart_cast<CGrenade*>(this)) PPhysicsShell()->SetIgnoreDynamic();
+		//if(!smart_cast<CCustomRocket*>(this)&&!smart_cast<CGrenade*>(this)) PPhysicsShell()->SetIgnoreDynamic();  LR_DEV CHECK
 	}
 //	XFORM().set					(l_p1);
 	correct_spawn_pos();
