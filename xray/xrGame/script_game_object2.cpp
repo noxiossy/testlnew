@@ -37,6 +37,8 @@
 #include "car.h"
 #include "movement_manager.h"
 #include "detail_path_manager.h"
+#include "detail_path_manager_space.h"
+#include "patrol_path_manager_space.h"
 
 void CScriptGameObject::explode	(u32 level_time)
 {
