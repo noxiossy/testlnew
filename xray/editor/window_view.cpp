@@ -8,6 +8,8 @@
 
 #include "resource.h"
 
+#pragma comment(lib, "gdi32.lib")
+
 using editor::window_ide;
 using editor::window_view;
 using editor::controls::property_incrementable;
@@ -55,8 +57,8 @@ void window_view::reclip_cursor					()
 	if (EditButton->Checked)
 		return;
 
-	if (!m_loaded)
-		return;
+	//if (!m_loaded)
+	//	return;
 
 	while (ShowCursor(FALSE) >= 0);
 
