@@ -16,7 +16,9 @@
 //#include "shader.h"
 //#include "R_Backend.h"
 
-#define VIEWPORT_NEAR  0.2f
+extern u32 g_dwFPSlimit;
+#define VIEWPORT_NEAR 0.2f
+#define HUD_VIEWPORT_NEAR 0.05f
 
 #define DEVICE_RESET_PRECACHE_FRAME_COUNT 10
 

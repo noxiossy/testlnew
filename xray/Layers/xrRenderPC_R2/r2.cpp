@@ -77,6 +77,16 @@ static class cl_water_intensity : public R_constant_setup
 	}
 }	binder_water_intensity;
 
+static class cl_tree_amplitude_intensity : public R_constant_setup
+{
+    void setup(R_constant* C) override
+    {
+        CEnvDescriptor& env = *g_pGamePersistent->Environment().CurrentEnv;
+        float fValue = env.m_fTreeAmplitudeIntensity;
+        RCache.set_c(C, fValue, fValue, fValue, 0);
+    }
+} binder_tree_amplitude_intensity;
+
 static class cl_sun_shafts_intensity : public R_constant_setup		
 {	
 	virtual void setup	(R_constant* C)
@@ -106,11 +116,7 @@ void					CRender::create					()
 	// Check for NULL render target support
 	D3DFORMAT	nullrt	= (D3DFORMAT)MAKEFOURCC('N','U','L','L');
 	o.nullrt			= HW.support	(nullrt,			D3DRTYPE_SURFACE, D3DUSAGE_RENDERTARGET);
-	/*
-	if (o.nullrt)		{
-	Msg				("* NULLRT supported and used");
-	};
-	*/
+
 	if (o.nullrt)		{
 		Msg				("* NULLRT supported");
 
@@ -195,7 +201,8 @@ void					CRender::create					()
 		o.fp16_blend	= FALSE;
 	}
 
-	VERIFY2				(o.mrt && (HW.Caps.raster.dwInstructions>=256),"Hardware doesn't meet minimum feature-level");
+	CHECK_OR_EXIT			(o.mrt && (HW.Caps.raster.dwInstructions>=256),"Hardware doesn't meet minimum feature-level");
+
 	if (o.mrtmixdepth)		o.albedo_wo		= FALSE	;
 	else if (o.fp16_blend)	o.albedo_wo		= FALSE	;
 	else					o.albedo_wo		= TRUE	;
@@ -205,25 +212,30 @@ void					CRender::create					()
 	// if hardware support early stencil (>= GF 8xxx) stencil reset trick only
 	// slows down.
 	o.nvstencil			= FALSE;
-	if ((HW.Caps.id_vendor==0x10DE)&&(HW.Caps.id_device>=0x40))	
+	if (!strstr(Core.Params, "-nonvs") && (HW.Caps.id_vendor == 0x10DE) && (HW.Caps.id_device >= 0x40))
 	{
 		//o.nvstencil = HW.support	((D3DFORMAT)MAKEFOURCC('R','A','W','Z'), D3DRTYPE_SURFACE, 0);
 		//o.nvstencil = TRUE;
 		o.nvstencil = ( S_OK==HW.pD3D->CheckDeviceFormat(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, D3DFMT_X8R8G8B8 , 0, D3DRTYPE_TEXTURE, (D3DFORMAT MAKEFOURCC('R','A','W','Z'))) );
 	}
-
-	if (strstr(Core.Params,"-nonvs"))		o.nvstencil	= FALSE;
+	if (o.nvstencil)	Msg("* NVStencil supported and used");
 
 	// nv-dbt
 	o.nvdbt				= HW.support	((D3DFORMAT)MAKEFOURCC('N','V','D','B'), D3DRTYPE_SURFACE, 0);
 	if (o.nvdbt)		Msg	("* NV-DBT supported and used");
 
 	// options (smap-pool-size)
-	if (strstr(Core.Params,"-smap1536"))	o.smapsize	= 1536;
-	if (strstr(Core.Params,"-smap2048"))	o.smapsize	= 2048;
-	if (strstr(Core.Params,"-smap2560"))	o.smapsize	= 2560;
-	if (strstr(Core.Params,"-smap3072"))	o.smapsize	= 3072;
-	if (strstr(Core.Params,"-smap4096"))	o.smapsize	= 4096;
+	if (r2_SmapSize >= 1024 && r2_SmapSize <= 4096)
+		o.smapsize = r2_SmapSize;
+	else if (r2_SmapSize > 4096) {
+		D3DCAPS9 caps;
+		CHK_DX(HW.pDevice->GetDeviceCaps(&caps));
+		auto video_mem = HW.pDevice->GetAvailableTextureMem();
+		if (caps.MaxTextureHeight >= r2_SmapSize && video_mem > 512)
+			o.smapsize = r2_SmapSize;
+	}
+
+	Msg("Shadow Map resolution: %ux%u", o.smapsize, o.smapsize);
 
 	// gloss
 	char*	g			= strstr(Core.Params,"-gloss ");

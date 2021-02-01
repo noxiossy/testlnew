@@ -1,6 +1,4 @@
 #include	"stdafx.h"
-#pragma		hdrstop
-
 #include	"xrRender_console.h"
 #include	"dxRenderDeviceRender.h"
 
@@ -54,6 +52,20 @@ xr_token							qsun_quality_token							[ ]={
 	{ "st_opt_extreme",				4												},
 #endif	//	USE_DX10
 	{ 0,							0												}
+};
+
+u32 r2_SmapSize = 2048;
+xr_token SmapSizeToken[] = {
+  { "1024x1024",   1024 },
+  { "1536x1536",   1536 },
+  { "2048x2048",   2048 },
+  { "2560x2560",   2560 },
+  { "3072x3072",   3072 },
+  { "4096x4096",   4096 },
+  { "6144x6144",   6144 },
+  { "8192x8192",   8192 },
+  { "16384x16384", 16384 },
+  { nullptr, 0 }
 };
 
 u32			ps_r3_msaa				=	0;			//	=	0;
@@ -317,9 +329,6 @@ class CCC_Screenshot : public IConsole_Command
 public:
 	CCC_Screenshot(LPCSTR N) : IConsole_Command(N)  { };
 	virtual void Execute(LPCSTR args) {
-		if (g_dedicated_server)
-			return;
-
 		string_path	name;	name[0]=0;
 		sscanf		(args,"%s",	name);
 		LPCSTR		image	= xr_strlen(name)?name:0;
@@ -675,7 +684,7 @@ void		xrRender_initconsole	()
 	CMD4(CCC_Float,		"r__wallmark_shift_v",	&ps_r__WallmarkSHIFT_V,		0.0f,	1.f		);
 	CMD1(CCC_ModelPoolStat,"stat_models"		);
 #endif // DEBUG
-	CMD4(CCC_Float,		"r__wallmark_ttl",		&ps_r__WallmarkTTL,			1.0f,	5.f*60.f);
+	CMD4(CCC_Float,		"r__wallmark_ttl",		&ps_r__WallmarkTTL,			1.0f,	10.f*60.f);
 
 	CMD4(CCC_Integer,	"r__supersample",		&ps_r__Supersample,			1,		8		);
 
@@ -772,7 +781,7 @@ void		xrRender_initconsole	()
 	CMD3(CCC_Mask,		"r2_sun_tsm",			&ps_r2_ls_flags,			R2FLAG_SUN_TSM	);
 	CMD4(CCC_Float,		"r2_sun_tsm_proj",		&ps_r2_sun_tsm_projection,	.001f,	0.8f	);
 	CMD4(CCC_Float,		"r2_sun_tsm_bias",		&ps_r2_sun_tsm_bias,		-0.5,	+0.5	);
-	CMD4(CCC_Float,		"r2_sun_near",			&ps_r2_sun_near,			1.f,	50.f	);
+	CMD4(CCC_Float,		"r2_sun_near",			&ps_r2_sun_near,			1.f,	150.f	);
 #if RENDER!=R_R1
 	CMD4(CCC_Float,		"r2_sun_far",			&OLES_SUN_LIMIT_27_01_07,	51.f,	180.f	);
 #endif
@@ -855,6 +864,8 @@ void		xrRender_initconsole	()
 
 	CMD3(CCC_Token,		"r2_sun_quality",				&ps_r_sun_quality,			qsun_quality_token);
 
+	CMD3(CCC_Token, 	"r__smap_size", 				&r2_SmapSize, 				SmapSizeToken);
+
 	//	Igor: need restart
 	CMD3(CCC_Mask,		"r2_soft_water",				&ps_r2_ls_flags,			R2FLAG_SOFT_WATER);
 	CMD3(CCC_Mask,		"r2_soft_particles",			&ps_r2_ls_flags,			R2FLAG_SOFT_PARTICLES);
@@ -893,11 +904,7 @@ void		xrRender_initconsole	()
 void	xrRender_apply_tf		()
 {
 	Console->Execute	("r__tf_aniso"	);
-#if RENDER==R_R1
-	Console->Execute	("r1_tf_mipbias");
-#else
 	Console->Execute	("r2_tf_mipbias");
-#endif
 }
 
 #endif

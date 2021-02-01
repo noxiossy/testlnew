@@ -28,13 +28,12 @@
 
 #include "xrSash.h"
 
-#pragma comment( lib, "d3dx9.lib"		)
-
 ENGINE_API CRenderDevice Device;
 ENGINE_API CLoadScreenRenderer load_screen_renderer;
 
 
 ENGINE_API BOOL g_bRendering = FALSE; 
+u32 g_dwFPSlimit = 60;
 
 BOOL		g_bLoaded = FALSE;
 ref_light	precache_light = 0;
@@ -239,9 +238,18 @@ void CRenderDevice::on_idle		()
 		return;
 	}
 
-#ifdef DEDICATED_SERVER
-	u32 FrameStartTime = TimerGlobal.GetElapsed_ms();
-#endif
+	// FPS Lock
+	constexpr u32 menuFPSlimit = 60, pauseFPSlimit = 60;
+	u32 curFPSLimit = IsMainMenuActive() ? menuFPSlimit : Device.Paused() ? pauseFPSlimit : g_dwFPSlimit;
+	if (curFPSLimit > 0)
+	{
+		static DWORD dwLastFrameTime = 0;
+		DWORD dwCurrentTime = timeGetTime();
+		if (dwCurrentTime - dwLastFrameTime < 1000 / (curFPSLimit + 1))
+			return;
+		dwLastFrameTime = dwCurrentTime;
+	}
+
 	if (psDeviceFlags.test(rsStatistic))	g_bEnableStatGather	= TRUE;
 	else									g_bEnableStatGather	= FALSE;
 	if(g_loading_events.size())
@@ -567,9 +575,9 @@ BOOL CRenderDevice::Paused()
 
 void CRenderDevice::OnWM_Activate(WPARAM wParam, LPARAM lParam)
 {
-	u16 fActive						= LOWORD(wParam);
-	BOOL fMinimized					= (BOOL) HIWORD(wParam);
-	BOOL bActive					= ((fActive!=WA_INACTIVE) && (!fMinimized))?TRUE:FALSE;
+	const	u16 fActive						= LOWORD(wParam);
+	const	BOOL fMinimized					= (BOOL) HIWORD(wParam);
+	const	BOOL bActive					= ((fActive!=WA_INACTIVE) && (!fMinimized))?TRUE:FALSE;
 	
 	if (bActive!=Device.b_is_Active)
 	{
