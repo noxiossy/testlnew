@@ -351,14 +351,14 @@ void RearrangeTabButtons(CUITabControl* pTab)
 
 bool CUIPdaWnd::OnKeyboardAction(int dik, EUIMessages keyboard_action)
 {
-	if (WINDOW_KEY_PRESSED == keyboard_action && IsShown())
-	{
 	if ( is_binded(kACTIVE_JOBS, dik) )
 	{
+		if ( WINDOW_KEY_PRESSED == keyboard_action )
+		{
 			HideDialog();
 
-		return true;
-	}	
+			return true;
+		}	
 	}
 	return inherited::OnKeyboardAction(dik,keyboard_action);
 }
