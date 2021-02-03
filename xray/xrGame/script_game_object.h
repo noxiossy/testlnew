@@ -301,7 +301,7 @@ public:
 			bool				inv_box_can_take		(bool status);
 			bool				inv_box_can_take_status	();
 
-	//передача порции информации InventoryOwner
+	//ГЇГҐГ°ГҐГ¤Г Г·Г  ГЇГ®Г°Г¶ГЁГЁ ГЁГ­ГґГ®Г°Г¬Г Г¶ГЁГЁ InventoryOwner
 			bool				GiveInfoPortion		(LPCSTR info_id);
 			bool				DisableInfoPortion	(LPCSTR info_id);
 			void				GiveGameNews		(LPCSTR caption, LPCSTR news, LPCSTR texture_name, int delay, int show_time);
@@ -309,10 +309,10 @@ public:
 
 			void				AddIconedTalkMessage_old(LPCSTR text, LPCSTR texture_name, LPCSTR templ_name) {};
 			void				AddIconedTalkMessage(LPCSTR caption, LPCSTR text, LPCSTR texture_name, LPCSTR templ_name);
-	//предикаты наличия/отсутствия порции информации у персонажа
+	//ГЇГ°ГҐГ¤ГЁГЄГ ГІГ» Г­Г Г«ГЁГ·ГЁГї/Г®ГІГ±ГіГІГ±ГІГўГЁГї ГЇГ®Г°Г¶ГЁГЁ ГЁГ­ГґГ®Г°Г¬Г Г¶ГЁГЁ Гі ГЇГҐГ°Г±Г®Г­Г Г¦Г 
 			bool				HasInfo				(LPCSTR info_id);
 			bool				DontHasInfo			(LPCSTR info_id);
-	//работа с заданиями
+	//Г°Г ГЎГ®ГІГ  Г± Г§Г Г¤Г Г­ГЁГїГ¬ГЁ
 			ETaskState			GetGameTaskState	(LPCSTR task_id);
 			void				SetGameTaskState	(ETaskState state, LPCSTR task_id);
 			void				GiveTaskToActor		(CGameTask* t, u32 dt, bool bCheckExisting, u32 t_timer);
@@ -767,6 +767,10 @@ public:
 			bool				is_weapon_going_to_be_strapped			( CScriptGameObject const* object ) const;
 
 	doors::door*				m_door;
+
+	// Rietmon
+	
+	void SetCharacterIcon(pcstr iconName);
 
 	DECLARE_SCRIPT_REGISTER_FUNCTION
 };
