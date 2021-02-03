@@ -29,6 +29,7 @@
 #include "UIScriptWnd.h"
 #include "../../xrServerEntities/script_engine.h"
 #include <luabind/functor.hpp>
+#include <luabind/class_rep.hpp>
 
 #define PDA_XML		"pda.xml"
 
