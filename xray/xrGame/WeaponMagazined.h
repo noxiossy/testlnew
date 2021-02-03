@@ -14,7 +14,8 @@ class ENGINE_API CMotionDef;
 class CWeaponMagazined: public CWeapon
 {
 private:
-	typedef CWeapon inherited;
+	using inherited = CWeapon;
+
 protected:
 	//звук текущего выстрела
 	shared_str		m_sSndShotCurrent;
@@ -28,6 +29,8 @@ protected:
 	ESoundTypes		m_eSoundShot;
 	ESoundTypes		m_eSoundEmptyClick;
 	ESoundTypes		m_eSoundReload;
+	ESoundTypes		m_eSoundReloadEmpty;
+	ESoundTypes		m_eSoundReloadMisfire;
 	bool			m_sounds_enabled;
 	// General
 	//кадр момента пересчета UpdateSounds
@@ -42,7 +45,14 @@ protected:
 	virtual void	switch2_Hiding	();
 	virtual void	switch2_Hidden	();
 	virtual void	switch2_Showing	();
-	
+	// mmccxvii: FWR code
+	//*
+	virtual void	switch2_Torch();
+	virtual void	OnSwitchTorch();
+
+	virtual void	switch2_FireMode();
+	virtual void	OnSwitchFireMode();
+	//*
 	virtual void	OnShot			();	
 	
 	virtual void	OnEmptyClick	();
@@ -137,8 +147,6 @@ protected:
 public:
 	virtual void	OnZoomIn			();
 	virtual void	OnZoomOut			();
-			void	OnNextFireMode		();
-			void	OnPrevFireMode		();
 			bool	HasFireModes		() { return m_bHasDifferentFireModes; };
 	virtual	int		GetCurrentFireMode	() { return m_aFireModes[m_iCurFireMode]; };	
 
@@ -160,6 +168,11 @@ protected:
 	virtual void	PlayReloadSound		();
 	virtual void	PlayAnimAim			();
 
+	// mmccxvii: FWR code
+	//*
+	virtual void	PlayAnimSwitchTorch();
+	virtual void	PlayAnimSwitchFireMode();
+	//*
 	virtual	int		ShotsFired			() { return m_iShotNum; }
 	virtual float	GetWeaponDeterioration	();
 
@@ -172,4 +185,12 @@ protected:
 										 u16 weapon_id,
 										 bool send_hit);
 
+private:
+	// mmccxvii: FWR code
+	//*
+	bool m_bNextFireMode;
+	//*
+
+public:
+	bool WeaponSoundExist(LPCSTR Section, LPCSTR SoundName);
 };

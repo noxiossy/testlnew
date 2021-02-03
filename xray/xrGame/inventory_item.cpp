@@ -123,6 +123,7 @@ void CInventoryItem::Load(LPCSTR section)
 	}
 	m_icon_name					= READ_IF_EXISTS(pSettings, r_string,section,"icon_name",		NULL);
 
+	m_remove_after_use = READ_IF_EXISTS(pSettings, r_bool, section, "remove_after_use", true);
 }
 
 void  CInventoryItem::ChangeCondition(float fDeltaCondition)

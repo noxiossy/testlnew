@@ -21,9 +21,16 @@
 #include "characterphysicssupport.h"
 #include "inventory.h"
 
+#include <luabind/functor.hpp>
+#include "script_engine.h"
+#include "ai_space.h"
+
 void CActor::attach_Vehicle(CHolderCustom* vehicle)
 {
-/*
+	luabind::functor<void> functor;
+	ai().script_engine().functor("rietmon_callbacks.car_message",functor);
+	functor(1);
+
 	if(!vehicle) return;
 	if(m_holder) return;
 
@@ -45,6 +52,7 @@ void CActor::attach_Vehicle(CHolderCustom* vehicle)
 	V->PlayCycle					(anims.idles[0],FALSE);
 
 	ResetCallbacks					();
+	//u16 head_bone					= pK->LL_BoneID("bip01_tail");
 	u16 head_bone					= pK->LL_BoneID("bip01_head");
 	pK->LL_GetBoneInstance			(u16(head_bone)).set_callback		(bctPhysics, VehicleHeadCallback,this);
 
@@ -55,11 +63,15 @@ void CActor::attach_Vehicle(CHolderCustom* vehicle)
 	SetWeaponHideState				(INV_STATE_CAR, true);
 
 	CStepManager::on_animation_start(MotionID(), 0);
-*/
+
 }
 
 void CActor::detach_Vehicle()
 {
+	luabind::functor<void> functor;
+	ai().script_engine().functor("rietmon_callbacks.off_music",functor);
+	functor(1);
+	
 	if(!m_holder) return;
 	CCar* car=smart_cast<CCar*>(m_holder);
 	if(!car)return;
@@ -133,5 +145,32 @@ bool CActor::use_Vehicle(CHolderCustom* object)
 void CActor::on_requested_spawn(CObject *object)
 {
 	CCar * car= smart_cast<CCar*>(object);
+
+	if (!car) return;
+
+	car->PPhysicsShell()->SplitterHolderDeactivate();
+	if (!character_physics_support()->movement()->ActivateBoxDynamic(0))
+	{
+		car->PPhysicsShell()->SplitterHolderActivate();
+		return;
+	}
+	car->PPhysicsShell()->SplitterHolderActivate();
+
+	character_physics_support()->movement()->SetPosition(car->ExitPosition());
+	character_physics_support()->movement()->SetVelocity(car->ExitVelocity());
+
+	car->DoEnter();
+
 	attach_Vehicle(car);
+
+	//SkyLoader: straightening of actor torso:
+	Fvector			xyz;
+	car->XFORM().getXYZi(xyz);
+	r_torso.yaw = xyz.y;
+
+}
+
+CCar* CActor::GetAttachedCar()
+{
+	return m_holder ? smart_cast<CCar*>(m_holder) : NULL;
 }

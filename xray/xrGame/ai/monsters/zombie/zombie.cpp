@@ -5,6 +5,17 @@
 #include "../../../../Include/xrRender/KinematicsAnimated.h"
 #include "../../../entitycondition.h"
 #include "../monster_velocity_space.h"
+#include "vampire/vampire_effector.h"
+#include "Actor.h"
+#include "ActorEffector.h"
+#include "sound_player.h"
+
+#include "../xrEngine/CameraBase.h"
+#include "ActorCondition.h"
+#include "PHDestroyable.h"
+#include "CharacterPhysicsSupport.h"
+#include "GamePersistent.h"
+#include "game_object_space.h"
 
 #include "../control_animation_base.h"
 #include "../control_movement_base.h"
@@ -13,6 +24,7 @@
 #include <dinput.h>
 #endif
 
+u32 CZombie::m_time_last_vampire = 0;
 
 CZombie::CZombie()
 {
@@ -68,23 +80,50 @@ void CZombie::Load(LPCSTR section)
 	anim().LinkAction(ACT_STEAL,			eAnimWalkFwd);
 	anim().LinkAction(ACT_LOOK_AROUND,	eAnimStandIdle);
 
+    m_hits_before_vampire = 0;
+
 #ifdef DEBUG	
 	anim().accel_chain_test		();
 #endif
 
-	PostLoad					(section);
+    LoadVampirePPEffector(pSettings->r_string(section, "vampire_effector"));
+    m_vampire_min_delay = pSettings->r_u32(section, "Vampire_Delay");
+	
+	m_vampire_pause_time = pSettings->r_u32(section, "Vampire_Pause")+Device.dwTimeGlobal;
+	m_vampire_pause_time_static = pSettings->r_u32(section, "Vampire_Pause");
+	m_vampire_chance = pSettings->r_u32(section, "Vampire_Chance");
+
+    m_vampire_want_speed = pSettings->r_float(section, "Vampire_Want_Speed");
+    m_vampire_wound = pSettings->r_float(section, "Vampire_Wound");
+	m_vampire_gain_health			= pSettings->r_float(section,"Vampire_GainHealth");
+	m_vampire_distance				= pSettings->r_float(section,"Vampire_Distance");
+	m_sufficient_hits_before_vampire	=	pSettings->r_u32(section,"Vampire_Sufficient_Hits");
+    m_sufficient_hits_before_vampire_random = -1 + (rand() % 3);
+
+    PostLoad(section);
+}
+
+void CZombie::update_vampire_pause_time()
+{
+	m_vampire_pause_time = m_vampire_pause_time_static+Device.dwTimeGlobal;
 }
 
 void CZombie::reinit()
 {
 	inherited::reinit();
+    CControlledActor::reinit();
 
 	Bones.Reset();
 	
+    com_man().ta_fill_data(anim_triple_vampire, "stand_attack_4_", "stand_attack_5_", "stand_attack_6_",
+        TA_EXECUTE_LOOPED, TA_DONT_SKIP_PREPARE, 0); // ControlCom::eCapturePath | ControlCom::eCaptureMovement);
+
 	time_dead_start			= 0;
 	last_hit_frame			= 0;
 	time_resurrect			= 0;
 	fake_death_left			= fake_death_count;
+
+    m_vampire_want_value = 0.f;
 
 	active_triple_idx		= u8(-1);
 }
@@ -93,12 +132,41 @@ void CZombie::reload(LPCSTR section)
 {
 	inherited::reload(section);
 
+    sound().add(pSettings->r_string(section, "Sound_Vampire_Grasp"), DEFAULT_SAMPLE_COUNT, SOUND_TYPE_MONSTER_ATTACKING,
+        MonsterSound::eHighPriority + 4, MonsterSound::eBaseChannel, eVampireGrasp, "bip01_head");
+    sound().add(pSettings->r_string(section, "Sound_Vampire_Sucking"), DEFAULT_SAMPLE_COUNT,
+        SOUND_TYPE_MONSTER_ATTACKING, MonsterSound::eHighPriority + 3, MonsterSound::eBaseChannel, eVampireSucking,
+        "bip01_head");
+    sound().add(pSettings->r_string(section, "Sound_Vampire_Hit"), DEFAULT_SAMPLE_COUNT, SOUND_TYPE_MONSTER_ATTACKING,
+        MonsterSound::eHighPriority + 2, MonsterSound::eBaseChannel, eVampireHit, "bip01_head");
+    sound().add(pSettings->r_string(section, "Sound_Vampire_StartHunt"), DEFAULT_SAMPLE_COUNT,
+        SOUND_TYPE_MONSTER_ATTACKING, MonsterSound::eHighPriority + 5, MonsterSound::eBaseChannel, eVampireStartHunt,
+        "bip01_head");
+
 	com_man().ta_fill_data(anim_triple_death[0],	"fake_death_0_0",	"fake_death_0_1",	"fake_death_0_2",	true, false);
 	com_man().ta_fill_data(anim_triple_death[1],	"fake_death_1_0",	"fake_death_1_1",	"fake_death_1_2",	true, false);
 	com_man().ta_fill_data(anim_triple_death[2],	"fake_death_2_0",	"fake_death_2_1",	"fake_death_2_2",	true, false);
 	com_man().ta_fill_data(anim_triple_death[3],	"fake_death_3_0",	"fake_death_3_1",	"fake_death_3_2",	true, false);
 }
 
+void CZombie::LoadVampirePPEffector(LPCSTR section)
+{
+    pp_vampire_effector.duality.h = pSettings->r_float(section, "duality_h");
+    pp_vampire_effector.duality.v = pSettings->r_float(section, "duality_v");
+    pp_vampire_effector.gray = pSettings->r_float(section, "gray");
+    pp_vampire_effector.blur = pSettings->r_float(section, "blur");
+    pp_vampire_effector.noise.intensity = pSettings->r_float(section, "noise_intensity");
+    pp_vampire_effector.noise.grain = pSettings->r_float(section, "noise_grain");
+    pp_vampire_effector.noise.fps = pSettings->r_float(section, "noise_fps");
+    VERIFY(!fis_zero(pp_vampire_effector.noise.fps));
+
+    sscanf(pSettings->r_string(section, "color_base"), "%f,%f,%f", &pp_vampire_effector.color_base.r,
+        &pp_vampire_effector.color_base.g, &pp_vampire_effector.color_base.b);
+    sscanf(pSettings->r_string(section, "color_gray"), "%f,%f,%f", &pp_vampire_effector.color_gray.r,
+        &pp_vampire_effector.color_gray.g, &pp_vampire_effector.color_gray.b);
+    sscanf(pSettings->r_string(section, "color_add"), "%f,%f,%f", &pp_vampire_effector.color_add.r,
+        &pp_vampire_effector.color_add.g, &pp_vampire_effector.color_add.b);
+}
 
 void CZombie::BoneCallback(CBoneInstance *B)
 {
@@ -125,6 +193,19 @@ void CZombie::vfAssignBones()
 	Bones.Reset();
 	Bones.AddBone(bone_spine, AXIS_Z);	Bones.AddBone(bone_spine, AXIS_Y); Bones.AddBone(bone_spine, AXIS_X);
 	Bones.AddBone(bone_head, AXIS_Z);	Bones.AddBone(bone_head, AXIS_Y);
+}
+
+void CZombie::ActivateVampireEffector()
+{
+    Actor()->Cameras().AddCamEffector(
+        new CVampireCameraEffector(6.0f, get_head_position(this), get_head_position(Actor())));
+    Actor()->Cameras().AddPPEffector(new CVampirePPEffector(pp_vampire_effector, 6.0f));
+}
+
+bool CZombie::WantVampire() { return !!fsimilar(m_vampire_want_value, 1.f); }
+void CZombie::SatisfyVampire()
+{
+    m_vampire_want_value = 0.f;
 }
 
 BOOL CZombie::net_Spawn (CSE_Abstract* DC) 
@@ -165,6 +246,25 @@ void	CZombie::Hit								(SHit* pHDS)
 	last_hit_frame = Device.dwFrame;
 }
 
+void CZombie::UpdateCL()
+{
+    inherited::UpdateCL();
+    CControlledActor::frame_update();
+
+    if (g_Alive())
+    {
+        // update vampire need
+        m_vampire_want_value += m_vampire_want_speed * client_update_fdelta();
+        clamp(m_vampire_want_value, 0.f, 1.f);
+    }
+}
+
+bool CZombie::done_enough_hits_before_vampire()
+{
+    return m_hits_before_vampire >= m_sufficient_hits_before_vampire + m_sufficient_hits_before_vampire_random;
+}
+
+void CZombie::on_attack_on_run_hit() { ++m_hits_before_vampire; }
 
 void CZombie::shedule_Update(u32 dt)
 {

@@ -48,6 +48,9 @@ public:
 	CUI3tButton			UIToTradeButton;
 //	CUI3tButton			UIToExitButton;
 
+	//информация о персонажах 
+	CUIStatic			UIOurIcon;
+	CUIStatic			UIOthersIcon;
 	CUICharacterInfo	UICharacterInfoLeft;
 	CUICharacterInfo	UICharacterInfoRight;
 
@@ -64,6 +67,10 @@ public:
 private:
 	CUIScrollView*			UIQuestionsList;
 	CUIScrollView*			UIAnswersList;
+
+	//элементы интерфейса диалога
+	CUIStatic*			UIDialogFrameTop;
+	CUIStatic*			UIDialogFrameBottom;
 
 	// Шрифт и цвет текста с именем персонажа
 	CGameFont			*m_pNameTextFont;

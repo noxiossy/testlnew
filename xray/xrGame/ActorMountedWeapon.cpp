@@ -5,10 +5,23 @@
 #include "../xrEngine/CameraBase.h"
 #include "ActorEffector.h"
 #include "CharacterPhysicsSupport.h"
+#include "holder_custom.h"
+
+#include "alife_space.h"
+#include "hit.h"
+#include "PHDestroyable.h"
+#include "Car.h"
+
+#include "../Include/xrRender/Kinematics.h"
+//#include "PHShellSplitter.h"
+
+#include "actor_anim_defs.h"
+#include "game_object_space.h"
+#include "inventory.h"
 
 bool CActor::use_MountedWeapon(CHolderCustom* object)
 {
-/*
+
 	CHolderCustom* wpn	=object;
 	if(m_holder){
 		if(!wpn||(m_holder==wpn)){
@@ -35,6 +48,6 @@ bool CActor::use_MountedWeapon(CHolderCustom* object)
 			}
 		}
 	}
-*/
+
 	return false;
 }

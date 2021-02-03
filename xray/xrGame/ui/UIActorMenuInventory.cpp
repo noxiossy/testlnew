@@ -50,6 +50,8 @@ void CUIActorMenu::InitInventoryMode()
 	m_pInventoryAutomaticList->Show		(true);
 	m_pQuickSlot->Show					(true);
 	m_pTrashList->Show					(true);
+	m_pInventoryBinocularList->Show(true); //--#SM+#--
+	m_pInventoryKnifeList->Show(true); //--#SM+#--
 	m_RightDelimiter->Show				(false);
 
 	InitInventoryContents				(m_pInventoryBagList);
@@ -127,8 +129,6 @@ void CUIActorMenu::SendEvent_Item_Eat(PIItem pItem, u16 recipient)
 void CUIActorMenu::SendEvent_Item_Drop(PIItem pItem, u16 recipient)
 {
 	R_ASSERT(pItem->parent_id()==recipient);
-	if (!IsGameTypeSingle())
-		pItem->DenyTrade();
 	//pItem->SetDropManual			(TRUE);
 	NET_Packet					P;
 	pItem->object().u_EventGen	(P,GE_OWNERSHIP_REJECT,pItem->parent_id());
@@ -240,9 +240,12 @@ void CUIActorMenu::OnInventoryAction(PIItem pItem, u16 action_type)
 		m_pInventoryAutomaticList,
 		m_pInventoryOutfitList,
 		m_pInventoryHelmetList,
-		m_pInventoryDetectorList,
+		m_pInventoryKnifeList, //--#SM+#--
+        m_pInventoryDetectorList,
+        m_pInventoryBinocularList, //--#SM+#--
 		m_pInventoryBagList,
 		m_pTradeActorBagList,
+		m_pDeadBodyActorBagList,
 		m_pTradeActorList,
 		NULL
 	};
@@ -421,6 +424,8 @@ void CUIActorMenu::InitInventoryContents(CUIDragDropListEx* pBagList)
 	InitCellForSlot				(INV_SLOT_2);
 	InitCellForSlot				(INV_SLOT_3);
 	InitCellForSlot				(OUTFIT_SLOT);
+	InitCellForSlot(BINOCULAR_SLOT); //--#SM+#--
+	InitCellForSlot(KNIFE_SLOT); //--#SM+#--
 	InitCellForSlot				(DETECTOR_SLOT);
 	InitCellForSlot				(GRENADE_SLOT);
 	InitCellForSlot				(HELMET_SLOT);
@@ -694,6 +699,9 @@ CUIDragDropListEx* CUIActorMenu::GetSlotList(u16 slot_idx)
 		case INV_SLOT_3:
 			return m_pInventoryAutomaticList;
 			break;
+		
+		case BINOCULAR_SLOT: return m_pInventoryBinocularList; break; //--#SM+#--
+			case KNIFE_SLOT: return m_pInventoryKnifeList; break; //--#SM+#--
 
 		case OUTFIT_SLOT:
 			return m_pInventoryOutfitList;
@@ -759,6 +767,12 @@ bool CUIActorMenu::ToQuickSlot(CUICellItem* itm)
 	if(!eat_item)
 		return false;
 
+	//Alundaio: Fix deep recursion if placing icon greater then col/row set in actor_menu.xml
+	Ivector2 iWH = iitem->GetInvGridRect().rb;
+	if (iWH.x > 1 || iWH.y > 1)
+		return false;
+	//Alundaio: END
+		
 	u8 slot_idx = u8(m_pQuickSlot->PickCell(GetUICursor().GetCursorPosition()).x);
 	if(slot_idx==255)
 		return false;
@@ -941,7 +955,7 @@ void CUIActorMenu::PropertiesBoxForWeapon( CUICellItem* cell_item, PIItem item, 
 		{
 		}
 	}
-	if ( smart_cast<CWeaponMagazined*>(pWeapon) && IsGameTypeSingle() )
+	if ( smart_cast<CWeaponMagazined*>(pWeapon) )
 	{
 		bool b = ( pWeapon->GetAmmoElapsed() !=0 );
 		if ( !b )

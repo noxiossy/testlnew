@@ -145,6 +145,7 @@ public:
 
 	SInvItemPlace				m_ItemCurrPlace;
 
+	bool						m_remove_after_use;
 
 	virtual void				OnMoveToSlot		(const SInvItemPlace& prev) {};
 	virtual void				OnMoveToBelt		(const SInvItemPlace& prev) {};

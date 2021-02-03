@@ -19,6 +19,12 @@
 #include "CustomOutfit.h"
 #include "ActorHelmet.h"
 
+#include "WeaponMagazined.h"
+
+#include <luabind/functor.hpp>
+#include "script_engine.h"
+#include "ai_space.h"
+
 static const float		TORCH_INERTION_CLAMP		= PI_DIV_6;
 static const float		TORCH_INERTION_SPEED_MAX	= 7.5f;
 static const float		TORCH_INERTION_SPEED_MIN	= 0.5f;
@@ -82,6 +88,10 @@ void CTorch::Load(LPCSTR section)
 	inherited::Load			(section);
 	light_trace_bone		= pSettings->r_string(section,"light_trace_bone");
 
+	if (pSettings->line_exist(section, "snd_turn_on"))
+		 m_sounds.LoadSound(section, "snd_turn_on", "sndTurnOn", false, SOUND_TYPE_ITEM_USING);
+	if (pSettings->line_exist(section, "snd_turn_off"))
+		 m_sounds.LoadSound(section, "snd_turn_off", "sndTurnOff", false, SOUND_TYPE_ITEM_USING);
 
 	m_bNightVisionEnabled = !!pSettings->r_bool(section,"night_vision");
 }
@@ -171,26 +181,70 @@ void CTorch::Switch()
 
 void CTorch::Switch(bool light_on)
 {
-	m_switched_on			= light_on;
-	if (can_use_dynamic_lights())
+	CActor* pActor = smart_cast<CActor*>(H_Parent());
+
+	if (pActor)
 	{
-		light_render->set_active(light_on);
-		
-		// CActor *pA = smart_cast<CActor *>(H_Parent());
-		//if(!pA)
-			light_omni->set_active(light_on);
+		CWeaponMagazined* CurrentWeapon = smart_cast<CWeaponMagazined*>(pActor->inventory().ActiveItem());
+
+		if (CurrentWeapon && !CurrentWeapon->IsPending())
+		{
+			CurrentWeapon->SwitchState(CWeaponMagazined::eTorch);
+
+			return;
+		}
+
+		pActor->PlayAnm("torch_switch_fast");
 	}
-	glow_render->set_active					(light_on);
+	RealSwitch(light_on);
+}
 
-	if (*light_trace_bone) 
+// mmccxvii: FWR code
+//*
+void CTorch::RealSwitch(bool light_on)
+{
+	CActor* pActor = smart_cast<CActor*>(H_Parent());
+	if (pActor)
+		{
+		if (light_on && !m_switched_on)
+			 {
+			if (m_sounds.FindSoundItem("SndTurnOn", false))
+				m_sounds.PlaySound("SndTurnOn", pActor->Position(), NULL, !!pActor->HUDview());
+				 luabind::functor<void> functor;
+				 ai().script_engine().functor("leer_scr.battery_upd",functor);
+				 functor(1);
+			}
+		else if (!light_on && m_switched_on)
+			 {
+			if (m_sounds.FindSoundItem("SndTurnOff", false))
+				 m_sounds.PlaySound("SndTurnOff", pActor->Position(), NULL, !!pActor->HUDview());
+			}
+		}
+
+	m_switched_on = light_on;
+
+	light_render->set_active(light_on);
+	light_omni->set_active(light_on);
+	glow_render->set_active(light_on);
+
+	if (*light_trace_bone)
 	{
-		IKinematics* pVisual				= smart_cast<IKinematics*>(Visual()); VERIFY(pVisual);
-		u16 bi								= pVisual->LL_BoneID(light_trace_bone);
+		IKinematics* pVisual = smart_cast<IKinematics*>(Visual());
 
-		pVisual->LL_SetBoneVisible			(bi,	light_on,	TRUE);
-		pVisual->CalculateBones				(TRUE);
+		if (!pVisual)
+			return;
+
+		u16 bi = pVisual->LL_BoneID(light_trace_bone);
+
+		if (bi == BI_NONE)
+			return;
+
+		pVisual->LL_SetBoneVisible(bi, light_on, TRUE);
+		pVisual->CalculateBones(TRUE);
 	}
 }
+//*
+
 bool CTorch::torch_active					() const
 {
 	return (m_switched_on);
@@ -212,6 +266,7 @@ BOOL CTorch::net_Spawn(CSE_Abstract* DC)
 	
 	bool b_r2				= !!psDeviceFlags.test(rsR2);
 	b_r2					|= !!psDeviceFlags.test(rsR3);
+	b_r2 					|= !!psDeviceFlags.test(rsR4);
 
 	IKinematics* K			= smart_cast<IKinematics*>(Visual());
 	CInifile* pUserData		= K->LL_UserData(); 

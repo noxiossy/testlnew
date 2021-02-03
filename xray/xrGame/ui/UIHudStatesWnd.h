@@ -22,7 +22,7 @@ private:
 //-	typedef ALife::EInfluenceType	EIndicatorType;
 
 	CUIStatic*			m_back;
-//	CUIStatic*			m_back_v;
+	CUIStatic*			m_back_v;
 //	CUIStatic*			m_back_over_arrow;
 //	CUIStatic*			m_static_armor;
 
@@ -47,15 +47,7 @@ private:
 	CUIStatic*			m_radia_damage;
 //	UI_Arrow*			m_arrow;
 //	UI_Arrow*			m_arrow_shadow;
-/*	
-	CUIStatic*			m_bleeding_lev1;
-	CUIStatic*			m_bleeding_lev2;
-	CUIStatic*			m_bleeding_lev3;
-	
-	CUIStatic*			m_radiation_lev1;
-	CUIStatic*			m_radiation_lev2;
-	CUIStatic*			m_radiation_lev3;
-*/
+
 	float				m_last_health;
 	float				m_health_blink;
 
@@ -76,6 +68,16 @@ private:
 	bool				m_fake_indicators_update;
 //	bool				m_cur_state_LA[it_max];
 	bool				m_b_force_update;
+
+protected:
+	CUIStatic*			m_ind_start_line;
+	CUIStatic*			m_ind_radiation;
+	CUIStatic*			m_ind_starvation;
+	CUIStatic*			m_ind_weapon_broken;
+	CUIStatic*			m_ind_bleeding;
+	CUIStatic*			m_ind_psyhealth;
+	CUIStatic*			m_ind_overweight;
+
 public:
 					CUIHudStatesWnd		();
 	virtual			~CUIHudStatesWnd	();
@@ -88,6 +90,7 @@ public:
 			void	on_connected		();
 			void	reset_ui			();
 			void	UpdateHealth		( CActor* actor );
+			void	UpdateIndicatorIcons	( CActor* actor );
 			void	SetAmmoIcon			( const shared_str& sect_name );
 			void	UpdateActiveItemInfo( CActor* actor );
 

@@ -10,6 +10,7 @@
 #include "../xrEngine/CameraBase.h"
 #include "player_hud.h"
 #include "../xrEngine/SkeletonMotions.h"
+#include "ui_base.h"
 
 CHudItem::CHudItem()
 {
@@ -360,11 +361,22 @@ bool CHudItem::TryPlayAnimIdle()
 			{
 				PlayAnimIdleSprint();
 				return true;
-			}else
-			if(!st.bCrouch && pActor->AnyMove())
+			}
+			else 
 			{
-				PlayAnimIdleMoving();
-				return true;
+				if (pActor->AnyMove())
+				{
+					if (st.bCrouch && IsHUDAnimationExist("anm_idle_moving_crouch"))
+					{
+						PlayHUDMotion("anm_idle_moving_crouch", true, nullptr, GetState());
+					}
+					else
+					{
+						PlayAnimIdleMoving();
+					}
+
+					return true;
+				}
 			}
 		}
 	}
@@ -409,3 +421,21 @@ attachable_hud_item* CHudItem::HudItemData()
 
 	return NULL;
 }
+
+// mmccxvii: FWR code (на основе функции за авторством AVO)
+//*
+bool CHudItem::IsHUDAnimationExist(LPCSTR AnimationName)
+{
+	// Пробуем получить худовой предмет
+	attachable_hud_item* HI = HudItemData();
+	if (!HI)
+		return false;
+
+	string256 AnimName;
+
+	u16 AttachPlace = *HI->m_sect_name ? READ_IF_EXISTS(pSettings, r_u16, HI->m_sect_name, "attach_place_idx", 0) : 0;
+	xr_sprintf(AnimName, "%s%s", AnimationName, ((AttachPlace == 1) && UI().is_widescreen()) ? "_16x9" : "");
+	player_hud_motion* Anm = HI->m_hand_motions.find_motion(AnimName);
+	return !!Anm;
+}
+//*

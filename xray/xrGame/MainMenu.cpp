@@ -340,7 +340,7 @@ void	CMainMenu::IR_OnKeyboardPress(int dik)
 
 	if( is_binded(kCONSOLE, dik) )
 	{
-		Console->Show();
+		//Console->Show(); LR_DEV NEEDED
 		return;
 	}
 	if (DIK_F12 == dik){

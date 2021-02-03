@@ -15,6 +15,7 @@
 #include "PhraseDialogManager.h"
 #include "ui_defs.h"
 
+#include "car.h"
 #include "step_manager.h"
 #include "script_export_space.h"
 
@@ -99,6 +100,8 @@ public:
 	virtual void						UpdateCL			( );
 	
 	virtual void						OnEvent				( NET_Packet& P, u16 type		);
+
+			void 						ChangeParam			(int param, float num);
 
 	// Render
 	virtual void						renderable_Render			();
@@ -246,7 +249,8 @@ public:
 	void					detach_Vehicle			();
 	void					steer_Vehicle			(float angle);
 	void					attach_Vehicle			(CHolderCustom* vehicle);
-
+	CCar*					GetAttachedCar			();
+	
 	virtual bool			can_attach				(const CInventoryItem *inventory_item) const;
 protected:
 	CHolderCustom*			m_holder;
@@ -275,7 +279,7 @@ protected:
 
 public:
 	SActorMotions*			m_anims;
-//.	SActorVehicleAnims*		m_vehicle_anims;
+	SActorVehicleAnims*		m_vehicle_anims;
 
 	CBlend*					m_current_legs_blend;
 	CBlend*					m_current_torso_blend;
@@ -312,7 +316,7 @@ public:
 	IC CCameraBase*			cam_Active			()	{return cameras[cam_active];}
 	IC CCameraBase*			cam_FirstEye		()	{return cameras[eacFirstEye];}
 
-protected:
+public:
 	virtual	void			cam_Set					(EActorCameras style);
 	void					cam_Update				(float dt, float fFOV);
 	void					cam_Lookout				( const Fmatrix &xform, float camera_height );
@@ -353,6 +357,7 @@ protected:
 
 	// Tip for action for object we're looking at
 	shared_str				m_sDefaultObjAction;
+	shared_str				m_sDeadCharacterTakeOutfit;
 	shared_str				m_sCharacterUseAction;
 	shared_str				m_sDeadCharacterUseAction;
 	shared_str				m_sDeadCharacterUseOrDragAction;
@@ -374,6 +379,10 @@ protected:
 	void					PickupInfoDraw		(CObject* object);
 	void					PickupModeUpdate_COD ();
 
+public:
+	void					PickupModeOn		();
+	void					PickupModeOff		();
+
 	//////////////////////////////////////////////////////////////////////////
 	// Motions (передвижения актрера)
 	//////////////////////////////////////////////////////////////////////////
@@ -390,6 +399,8 @@ public:
 	bool					CanJump					();
 	bool					CanMove					();
 	float					CameraHeight			();
+// Alex ADD: for smooth crouch fix
+	float					CurrentHeight;
 	bool					CanSprint				();
 	bool					CanRun					();
 	void					StopAnyMove				();
@@ -399,7 +410,7 @@ public:
 
 	bool					is_jump					();
 	u32						MovingState				() const {return mstate_real;}
-protected:
+public:
 	u32						mstate_wishful;
 	u32						mstate_old;
 	u32						mstate_real;
@@ -415,6 +426,8 @@ protected:
 	float					m_fClimbFactor;
 	float					m_fSprintFactor;
 
+	float					m_WeightForScripts;
+
 	float					m_fWalk_StrafeFactor;
 	float					m_fRun_StrafeFactor;
 
@@ -424,6 +437,7 @@ public:
 	// User input/output
 	//////////////////////////////////////////////////////////////////////////
 public:
+	void 					CallbackInput			(int DIK, int mode);
 	virtual void			IR_OnMouseMove			(int x, int y);
 	virtual void			IR_OnKeyboardPress		(int dik);
 	virtual void			IR_OnKeyboardRelease	(int dik);
@@ -638,7 +652,7 @@ virtual	 void	_BCL	HideAllWeapons					( bool v ){ SetWeaponHideState(INV_STATE_B
 
 public:
 		void							SetCantRunState					(bool bSet);
-private:
+public:
 	CActorCondition				*m_entity_condition;
 
 protected:
@@ -746,7 +760,17 @@ private:
 	bool					m_inventory_disabled;
 //static CPhysicsShell		*actor_camera_shell;
 
-DECLARE_SCRIPT_REGISTER_FUNCTION
+public:
+	// mmccxvii: FWR code
+	//*
+
+	// ?.anm anims\\camera_effects
+	void PlayAnm(LPCSTR Section);
+
+	//*
+
+private:
+	DECLARE_SCRIPT_REGISTER_FUNCTION
 };
 add_to_type_list(CActor)
 #undef script_type_list

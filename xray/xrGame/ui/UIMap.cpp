@@ -573,7 +573,7 @@ void CUIMiniMap::UpdateSpots()
 	for(Locations_it it=ls.begin(); it!=ls.end(); ++it)
 		(*it).location->UpdateMiniMap(this);
 }
-
+/*
 void  CUIMiniMap::Draw()
 {
 	u32	segments_count			= 20;
@@ -675,4 +675,4 @@ bool CUIMiniMap::IsRectVisible(Frect r)
 	r.getcenter				(rect_center);
 	float spot_radius		= r.width() / 2.0f;
 	return clip_center.distance_to(rect_center)+spot_radius < vis_radius; //assume that all minimap spots are circular
-}
+}*/

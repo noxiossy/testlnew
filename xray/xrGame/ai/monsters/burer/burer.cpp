@@ -247,7 +247,7 @@ void xr_stdcall CBurer::StaminaHit ()
 
 	Actor()->conditions().PowerHit		(stamina_hit, false);
 
-	if ( do_weapon_drop )
+	if ( do_weapon_drop && !Actor()->HasInfo("lvl_3_hunter") )
 	{
 		Fvector dir					=	Actor()->Direction();
 		if ( dir.y < 0.f )

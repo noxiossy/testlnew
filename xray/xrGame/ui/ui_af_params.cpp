@@ -8,13 +8,18 @@
 #include "UIXmlInit.h"
 #include "UIHelper.h"
 #include "../string_table.h"
+#include "../Inventory_Item.h"
+#include "../Artefact.h"
+
+#include "../CustomOutfit.h"
+#include "../ActorHelmet.h"
 
 u32 const red_clr   = color_argb(255,210,50,50);
 u32 const green_clr = color_argb(255,170,170,170);
 
 CUIArtefactParams::CUIArtefactParams()
 {
-	for ( u32 i = 0; i < ALife::infl_max_count; ++i )
+	for ( u32 i = 0; i < 9; ++i )
 	{
 		m_immunity_item[i] = NULL;
 	}
@@ -41,10 +46,10 @@ LPCSTR af_immunity_section_names[] = // ALife::EInfluenceType
 	"telepatic_immunity",		// infl_psi=3
 	"shock_immunity",			// infl_electra=4
 
-//	"strike_immunity",
-//	"wound_immunity",		
-//	"explosion_immunity",
-//	"fire_wound_immunity",
+	"strike_immunity",
+	"wound_immunity",		
+	"explosion_immunity",
+	"fire_wound_immunity",
 };
 
 LPCSTR af_restore_section_names[] = // ALife::EConditionRestoreType
@@ -64,10 +69,10 @@ LPCSTR af_immunity_caption[] =  // ALife::EInfluenceType
 	"ui_inv_outfit_telepatic_protection",		// "(telepatic_imm)",
 	"ui_inv_outfit_shock_protection",			// "(shock_imm)",
 
-//	"ui_inv_outfit_strike_protection",			// "(strike_imm)",
-//	"ui_inv_outfit_wound_protection",			// "(wound_imm)",
-//	"ui_inv_outfit_explosion_protection",		// "(explosion_imm)",
-//	"ui_inv_outfit_fire_wound_protection",		// "(fire_wound_imm)",
+	"ui_inv_outfit_strike_protection",			// "(strike_imm)",
+	"ui_inv_outfit_wound_protection",			// "(wound_imm)",
+	"ui_inv_outfit_explosion_protection",		// "(explosion_imm)",
+	"ui_inv_outfit_fire_wound_protection",		// "(fire_wound_imm)",
 };
 
 LPCSTR af_restore_caption[] =  // ALife::EConditionRestoreType
@@ -108,7 +113,7 @@ void CUIArtefactParams::InitFromXml( CUIXml& xml )
 	m_Prop_line->SetAutoDelete( false );	
 	CUIXmlInit::InitStatic( xml, "prop_line", 0, m_Prop_line );
 
-	for ( u32 i = 0; i < ALife::infl_max_count; ++i )
+	for ( u32 i = 0; i < 9; ++i )
 	{
 		m_immunity_item[i] = xr_new<UIArtefactParamItem>();
 		m_immunity_item[i]->Init( xml, af_immunity_section_names[i] );
@@ -166,10 +171,10 @@ void CUIArtefactParams::SetInfo( shared_str const& af_section )
 	Fvector2 pos;
 	float h = m_Prop_line->GetWndPos().y+m_Prop_line->GetWndSize().y;
 
-	for ( u32 i = 0; i < ALife::infl_max_count; ++i )
+	for (u32 i = 0; i < 9; ++i)
 	{
 		shared_str const& sect = pSettings->r_string( af_section, "hit_absorbation_sect" );
-		val	= pSettings->r_float( sect, af_immunity_section_names[i] );
+		val = READ_IF_EXISTS(pSettings, r_float, sect, af_immunity_section_names[i], 0.f);
 		if ( fis_zero(val) )
 		{
 			continue;

@@ -31,6 +31,8 @@ public:
 	virtual void 			UpdateCL					();
 	virtual void 			shedule_Update				(u32 dt);
 
+	virtual void 			StartThrow		()	 {m_constpower = true; SwitchState(eThrowStart); m_throw = true;}
+
 	virtual void 			OnH_A_Chield				();
 	virtual void 			OnH_B_Independent			(bool just_before_destroy);
 

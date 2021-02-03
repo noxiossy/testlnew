@@ -20,6 +20,9 @@
 #include "CharacterPhysicsSupport.h"
 #include "EffectorShot.h"
 
+ENGINE_API extern float psHUD_FOV; //--#SM+#--
+ENGINE_API extern float psHUD_FOV_def; //--#SM+#--
+
 #include "PHMovementControl.h"
 #include "../xrphysics/ielevatorstate.h"
 #include "../xrphysics/actorcameracollision.h"
@@ -288,6 +291,17 @@ void CActor::cam_Update(float dt, float fFOV)
 {
 	if(m_holder)		return;
 
+	// HUD FOV Update --#SM+#--
+	if (this == Level().CurrentControlEntity())
+	{
+		CWeapon* pWeapon = smart_cast<CWeapon*>(this->inventory().ActiveItem());
+		if (eacFirstEye == cam_active && pWeapon)
+			psHUD_FOV = pWeapon->GetHudFov();
+		else
+			psHUD_FOV = psHUD_FOV_def;
+	}
+	//--#SM+#--
+
 	if( (mstate_real & mcClimb) && (cam_active!=eacFreeLook) )
 		camUpdateLadder(dt);
 	on_weapon_shot_update();
@@ -310,8 +324,16 @@ void CActor::cam_Update(float dt, float fFOV)
 		current_ik_cam_shift = cam_smooth_k * current_ik_cam_shift + y_shift * ( 1.f - cam_smooth_k );
 	} else
 		current_ik_cam_shift = 0;
+	
+	// Alex ADD: smooth crouch fix
+	float HeightInterpolationSpeed = 4.f;
 
-	Fvector point		= {0,CameraHeight() + current_ik_cam_shift,0}; 
+	if (CurrentHeight != CameraHeight())
+	{
+		CurrentHeight = (CurrentHeight * (1.0f - HeightInterpolationSpeed*dt)) + (CameraHeight() * HeightInterpolationSpeed*dt);
+	}
+
+	Fvector point = { 0, CurrentHeight + current_ik_cam_shift, 0 };
 	Fvector dangle		= {0,0,0};
 	Fmatrix				xform;
 	xform.setXYZ		(0,r_torso.yaw,0);

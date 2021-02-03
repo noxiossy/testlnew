@@ -72,7 +72,7 @@ extern	u64		g_qwStartGameTime;
 extern	u64		g_qwEStartGameTime;
 
 ENGINE_API
-extern	float	psHUD_FOV;
+extern	float	psHUD_FOV_def;
 extern	float	psSqueezeVelocity;
 extern	int		psLUA_GCSTEP;
 
@@ -395,15 +395,13 @@ public:
 
 	CCC_DemoRecord(LPCSTR N) : IConsole_Command(N) {};
 	virtual void Execute(LPCSTR args) {
-		#ifndef	DEBUG
-		//if (GameID() != eGameIDSingle) 
-		//{
-		//	Msg("For this game type Demo Record is disabled.");
-		//	return;
-		//};
-		#endif
+		if (!g_pGameLevel) // level not loaded
+		{
+			Msg("Demo Record is disabled when level is not loaded.");
+			return;
+		}
 		Console->Hide	();
-
+		if (MainMenu()->IsActive()) MainMenu()->Activate(false); // close main menu if it is open
 		LPSTR			fn_; 
 		STRCONCAT		(fn_, args, ".xrdemo");
 		string_path		fn;
@@ -536,6 +534,15 @@ public:
 		if(!g_actor || !Actor()->g_Alive())
 		{
 			Msg("cannot make saved game because actor is dead :(");
+			return;
+		}
+		if(Actor()->HasInfo("block_saving"))
+		{
+			Msg("not this time, bro");
+			SDrawStaticStruct* _s		= CurrentGameUI()->AddCustomStatic("game_saved", true);
+			LPSTR						save_name;
+			STRCONCAT					(save_name, CStringTable().translate("st_not_game_saved"));
+			_s->wnd()->TextItemControl()->SetText(save_name);
 			return;
 		}
 
@@ -1187,7 +1194,7 @@ public:
 */
 #endif
 
-#ifndef MASTER_GOLD
+//#ifndef MASTER_GOLD
 #	include "game_graph.h"
 struct CCC_JumpToLevel : public IConsole_Command {
 	CCC_JumpToLevel(LPCSTR N) : IConsole_Command(N)  {};
@@ -1265,6 +1272,7 @@ public:
 
 };
 
+//#endif // MASTER_GOLD
 class CCC_ScriptCommand : public IConsole_Command {
 public:
 	CCC_ScriptCommand	(LPCSTR N) : IConsole_Command(N)  { bEmptyArgsHandled = false; };
@@ -1342,7 +1350,6 @@ public:
 	}
 };
 
-#endif // MASTER_GOLD
 
 #include "GamePersistent.h"
 
@@ -1801,7 +1808,9 @@ void CCC_RegisterCommands()
 
 	CMD3(CCC_Mask,				"g_backrun",			&psActorFlags,	AF_RUN_BACKWARD);
 
-	// alife
+	CMD3(CCC_Mask, 				"g_multi_item_pickup", 	&psActorFlags, 	AF_MULTI_ITEM_PICKUP);
+
+    // alife
 #ifdef DEBUG
 	CMD1(CCC_ALifePath,			"al_path"				);		// build path
 
@@ -1828,18 +1837,46 @@ void CCC_RegisterCommands()
 	CMD3(CCC_Mask,				"hud_draw",				&psHUD_Flags,	HUD_DRAW);
 
 	// hud
-	psHUD_Flags.set(HUD_CROSSHAIR,		true);
-	psHUD_Flags.set(HUD_WEAPON,			true);
-	psHUD_Flags.set(HUD_DRAW,			true);
-	psHUD_Flags.set(HUD_INFO,			true);
+	psHUD_Flags.set(HUD_CROSSHAIR,			true);
+	psHUD_Flags.set(HUD_LR_CROSSHAIR,		false);
+	psHUD_Flags.set(HUD_LR_HEALTH,			false);
+	psHUD_Flags.set(HUD_LR_ICON_STAMINA,	false);
+	psHUD_Flags.set(HUD_LR_ICON_HEALTH,		false);
+	psHUD_Flags.set(HUD_LR_ICON_QUICK,		false);
+	psHUD_Flags.set(HUD_LR_DRAW_MINIMAP,	true);
+	psHUD_Flags.set(HUD_LR_ALT_MINIMAP, 	false);
+	psHUD_Flags.set(HUD_LR_ALT_MINIMAP_2, 	false);
+	psHUD_Flags.set(HUD_LR_DRAW_BACK_HUD,	true);
+	psHUD_Flags.set(HUD_LR_DRAW_BACK_WPN,	true);
+	psHUD_Flags.set(HUD_LR_ALT_BACK_HUD, 	false);
+	psHUD_Flags.set(HUD_LR_ALT_BACK_HUD_2, 	false);
+	psHUD_Flags.set(HUD_LR_ANIMATIONS, 		true);
+	psHUD_Flags.set(HUD_LR_HUDDRAW_TOGGLE, 	false);
+	psHUD_Flags.set(HUD_WEAPON,				true);
+	psHUD_Flags.set(HUD_DRAW,				true);
+	psHUD_Flags.set(HUD_INFO,				true);
 
-	CMD3(CCC_Mask,				"hud_crosshair",		&psHUD_Flags,	HUD_CROSSHAIR);
-	CMD3(CCC_Mask,				"hud_crosshair_dist",	&psHUD_Flags,	HUD_CROSSHAIR_DIST);
+	CMD3(CCC_Mask,				"hud_crosshair",			&psHUD_Flags,	HUD_CROSSHAIR);
+	CMD3(CCC_Mask,				"hud_lr_crosshair",			&psHUD_Flags,	HUD_LR_CROSSHAIR);
+	CMD3(CCC_Mask,				"hud_lr_health",			&psHUD_Flags,	HUD_LR_HEALTH);
+	CMD3(CCC_Mask,				"hud_lr_icon_stamina",		&psHUD_Flags,	HUD_LR_ICON_STAMINA);
+	CMD3(CCC_Mask,				"hud_lr_icon_quick",		&psHUD_Flags,	HUD_LR_ICON_QUICK);
+	CMD3(CCC_Mask,				"hud_lr_icon_health",		&psHUD_Flags,	HUD_LR_ICON_HEALTH);
+	CMD3(CCC_Mask,				"hud_lr_draw_minimap",		&psHUD_Flags,	HUD_LR_DRAW_MINIMAP);
+	CMD3(CCC_Mask,				"hud_lr_alt_minimap",		&psHUD_Flags,	HUD_LR_ALT_MINIMAP);
+	CMD3(CCC_Mask,				"hud_lr_alt_minimap_2",		&psHUD_Flags,	HUD_LR_ALT_MINIMAP_2);
+	CMD3(CCC_Mask,				"hud_lr_draw_back_hud",		&psHUD_Flags,	HUD_LR_DRAW_BACK_HUD);
+	CMD3(CCC_Mask,				"hud_lr_draw_back_wpn",		&psHUD_Flags,	HUD_LR_DRAW_BACK_WPN);
+	CMD3(CCC_Mask,				"hud_lr_alt_back_hud",		&psHUD_Flags,	HUD_LR_ALT_BACK_HUD);
+	CMD3(CCC_Mask,				"hud_lr_alt_back_hud_2",	&psHUD_Flags,	HUD_LR_ALT_BACK_HUD_2);
+	CMD3(CCC_Mask,				"hud_lr_animations",		&psHUD_Flags,	HUD_LR_ANIMATIONS);
+	CMD3(CCC_Mask,				"hud_lr_huddraw_toggle",	&psHUD_Flags,	HUD_LR_HUDDRAW_TOGGLE);
+	CMD3(CCC_Mask,				"hud_crosshair_dist",		&psHUD_Flags,	HUD_CROSSHAIR_DIST);
 
-#ifdef DEBUG
-	CMD4(CCC_Float,				"hud_fov",				&psHUD_FOV,		0.1f,	1.0f);
-	CMD4(CCC_Float,				"fov",					&g_fov,			5.0f,	180.0f);
-#endif // DEBUG
+//#ifdef DEBUG
+	CMD4(CCC_Float,				"hud_fov",				&psHUD_FOV_def,		0.2f,	0.55f);
+	CMD4(CCC_Float,				"fov",					&g_fov,			40.0f,	75.0f);
+//#endif // DEBUG
 
 	// Demo
 #if 1//ndef MASTER_GOLD
@@ -1976,14 +2013,12 @@ CMD4(CCC_Integer,			"hit_anims_tune",						&tune_hit_anims,		0, 1);
 	CMD3(CCC_Mask,				"g_no_clip",					&psActorFlags,	AF_NO_CLIP	);
 #endif // DEBUG
 
-#ifndef MASTER_GOLD
 	CMD1(CCC_JumpToLevel,	"jump_to_level"		);
 	CMD3(CCC_Mask,			"g_god",			&psActorFlags,	AF_GODMODE	);
 	CMD3(CCC_Mask,			"g_unlimitedammo",	&psActorFlags,	AF_UNLIMITEDAMMO);
 	CMD1(CCC_Script,		"run_script");
 	CMD1(CCC_ScriptCommand,	"run_string");
 	CMD1(CCC_TimeFactor,	"time_factor");		
-#endif // MASTER_GOLD
 
 	CMD3(CCC_Mask,		"g_autopickup",			&psActorFlags,	AF_AUTOPICKUP);
 	CMD3(CCC_Mask,		"g_dynamic_music",		&psActorFlags,	AF_DYNAMIC_MUSIC);

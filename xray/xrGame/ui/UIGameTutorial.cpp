@@ -12,6 +12,7 @@
 #include "../UIGameCustom.h"
 #include "UIActorMenu.h"
 #include "UIPdaWnd.h"
+#include "../actor.h"
 
 extern ENGINE_API BOOL bShowPauseString;
 
@@ -389,6 +390,7 @@ void CUISequencer::IR_OnMouseWheel		(int direction)
 
 void CUISequencer::IR_OnKeyboardPress	(int dik)
 {
+	if (Actor()->HasInfo("anim_input") || Actor()->HasInfo("kek")) return;
 	if(m_sequencer_items.size())	
 		m_sequencer_items.front()->OnKeyboardPress			(dik);
 	

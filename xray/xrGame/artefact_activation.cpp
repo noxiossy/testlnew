@@ -47,8 +47,8 @@ void SArtefactActivation::Load()
 
 
 	m_activation_states[(int)eStarting].Load(activation_seq,	"starting");
-	m_activation_states[(int)eFlying].Load(activation_seq,		"flying");
-	m_activation_states[(int)eBeforeSpawn].Load(activation_seq,	"idle_before_spawning");
+	//m_activation_states[(int)eFlying].Load(activation_seq,		"flying");
+	//m_activation_states[(int)eBeforeSpawn].Load(activation_seq,	"idle_before_spawning");
 	m_activation_states[(int)eSpawnZone].Load(activation_seq,	"spawning");
 
 }

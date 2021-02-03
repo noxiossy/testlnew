@@ -491,6 +491,7 @@ void CKinematics::Visibility_Update	()
 			children_invisible.push_back	(children[c_it]);	
 			swap(children[c_it],children.back());
 			children.pop_back				();
+			Update_Visibility 				= TRUE;
 		}
 	}
 
@@ -502,6 +503,7 @@ void CKinematics::Visibility_Update	()
 			children.push_back				(children_invisible[_it]);	
 			swap(children_invisible[_it],children_invisible.back());
 			children_invisible.pop_back		();
+			Update_Visibility 				= TRUE;
 		}
 	}
 }
@@ -652,12 +654,6 @@ void CKinematics::AddWallmark(const Fmatrix* parent_xform, const Fvector3& start
 	wallmarks.push_back		(wm);
 }
 
-static const float LIFE_TIME=30.f;
-struct zero_wm_pred : public std::unary_function<intrusive_ptr<CSkeletonWallmark>, bool>
-{
-	bool operator()(const intrusive_ptr<CSkeletonWallmark> x){ return x==0; }
-};
-
 void CKinematics::CalculateWallmarks()
 {
 	if (!wallmarks.empty()&&(wm_frame!=RDEVICE.dwFrame)){
@@ -665,7 +661,7 @@ void CKinematics::CalculateWallmarks()
 		bool need_remove	= false; 
 		for (SkeletonWMVecIt it=wallmarks.begin(); it!=wallmarks.end(); it++){
 			intrusive_ptr<CSkeletonWallmark>& wm = *it;
-			float w	= (RDEVICE.fTimeGlobal-wm->TimeStart())/LIFE_TIME;
+			float w	= (RDEVICE.fTimeGlobal-wm->TimeStart())/ ps_r__WallmarkTTL;
 			if (w<1.f){
 				// append wm to WallmarkEngine
 				if (::Render->ViewBase.testSphere_dirty(wm->m_Bounds.P,wm->m_Bounds.R))
@@ -695,7 +691,7 @@ void CKinematics::RenderWallmark(intrusive_ptr<CSkeletonWallmark> wm, FVF::LIT* 
 	// skin vertices
 	for (u32 f_idx=0; f_idx<wm->m_Faces.size(); f_idx++){
 		CSkeletonWallmark::WMFace F = wm->m_Faces[f_idx];
-		float w	= (RDEVICE.fTimeGlobal-wm->TimeStart())/LIFE_TIME;
+		float w	= (RDEVICE.fTimeGlobal-wm->TimeStart())/ ps_r__WallmarkTTL;
 		for (u32 k=0; k<3; k++){
 			Fvector P;
 			if (F.bone_id[k][0]==F.bone_id[k][1]){

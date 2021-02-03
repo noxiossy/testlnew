@@ -57,7 +57,15 @@ void CUITextureMaster::ParseShTexInfo(LPCSTR xml_file)
 			info.rect.y1 = xml.ReadAttribFlt(node, "texture",i,"y");
 			info.rect.y2 = xml.ReadAttribFlt(node, "texture",i,"height") + info.rect.y1;
 			shared_str id = xml.ReadAttrib	(node, "texture",i,"id");
-			m_textures.insert(mk_pair(id,info));
+            /* avo: fix issue when values were not updated (silently skipped) when same key is encountered more than once. This is how std::map is designed. 
+            /* Also used more efficient C++11 std::map::emplace method instead of outdated std::pair::make_pair */
+            /* XXX: avo: note that xxx.insert(mk_pair(v1,v2)) pattern is used extensively throughout solution so there is a good potential for other bug fixes/improvements */
+            if (m_textures.find(id) == m_textures.end())
+                m_textures.emplace(id, info);
+            else
+                m_textures[id] = info;
+            //m_textures.insert(mk_pair(id,info)); // original GSC insert call
+            /* avo: end */
 		}
 
 		xml.SetLocalRoot		(root_node);

@@ -95,10 +95,14 @@ protected:
 	CUIDragDropListEx*			m_pInventoryDetectorList;
 	CUIDragDropListEx*			m_pInventoryBagList;
 
+	CUIDragDropListEx* 			m_pInventoryBinocularList; //--#SM+#--
+	CUIDragDropListEx* 			m_pInventoryKnifeList; //--#SM+#--
+
 	CUIDragDropListEx*			m_pTradeActorBagList;
 	CUIDragDropListEx*			m_pTradeActorList;
 	CUIDragDropListEx*			m_pTradePartnerBagList;
 	CUIDragDropListEx*			m_pTradePartnerList;
+	CUIDragDropListEx*			m_pDeadBodyActorBagList;
 	CUIDragDropListEx*			m_pDeadBodyBagList;
 	CUIDragDropListEx*			m_pTrashList;
 
@@ -109,6 +113,8 @@ protected:
 	CUIStatic*					m_InvSlot2Highlight;
 	CUIStatic*					m_InvSlot3Highlight;
 	CUIStatic*					m_HelmetSlotHighlight;
+	CUIStatic* 					m_KnifeSlotHighlight; //--#SM+#--
+	CUIStatic* 					m_BinocularSlotHighlight; //--#SM+#--
 	CUIStatic*					m_OutfitSlotHighlight;
 	CUIStatic*					m_DetectorSlotHighlight;
 	CUIStatic*					m_QuickSlotsHighlight[4];
@@ -117,7 +123,8 @@ protected:
 	CUIInventoryUpgradeWnd*		m_pUpgradeWnd;
 	
 	CUIStatic*					m_LeftBackground;
-
+	CUIStatic*					m_LRBackground;
+	
 	UIInvUpgradeInfo*			m_upgrade_info;
 	CUIMessageBoxEx*			m_message_box_yes_no;
 	CUIMessageBoxEx*			m_message_box_ok;

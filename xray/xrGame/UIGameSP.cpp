@@ -111,14 +111,14 @@ bool CUIGameSP::IR_UIOnKeyboardPress(int dik)
 	{
 	case kACTIVE_JOBS:
 		{
-			if ( !pActor->inventory_disabled() )
+			if ( !pActor->inventory_disabled() && (!Actor()->HasInfo("block_pda")) )
 				ShowPdaMenu();
 			break;
 		}
 
 	case kINVENTORY:
 		{
-			if ( !pActor->inventory_disabled() )
+			if ( !pActor->inventory_disabled() && (!Actor()->HasInfo("block_inventory")) )
 				ShowActorMenu();
 
 			break;
@@ -286,25 +286,56 @@ bool CChangeLevelWnd::OnKeyboardAction(int dik, EUIMessages keyboard_action)
 	return inherited::OnKeyboardAction(dik, keyboard_action);
 }
 
+
 bool g_block_pause	= false;
-void CChangeLevelWnd::Show()
+
+// Morrey: Не инициализировалась форма, поскольку виртуальная функция отличалась набором аргуметов 
+void CChangeLevelWnd::Show(bool status)
 {
-	m_messageBox->InitMessageBox(m_b_allow_change_level?"message_box_change_level":"message_box_change_level_disabled");
-	SetWndPos				(m_messageBox->GetWndPos());
-	m_messageBox->SetWndPos	(Fvector2().set(0.0f,0.0f));
-	SetWndSize				(m_messageBox->GetWndSize());
+    inherited::Show(status);
+    if (status)
+    {
+        m_messageBox->InitMessageBox(
+            m_b_allow_change_level ? "message_box_change_level" : "message_box_change_level_disabled");
+        SetWndPos(m_messageBox->GetWndPos());
+        m_messageBox->SetWndPos(Fvector2().set(0.0f, 0.0f));
+        SetWndSize(m_messageBox->GetWndSize());
 
-	m_messageBox->SetText	(m_message_str.c_str());
-	
+        m_messageBox->SetText(m_message_str.c_str());
 
-	g_block_pause							= true;
-	Device.Pause							(TRUE, TRUE, TRUE, "CChangeLevelWnd_show");
-	bShowPauseString						= FALSE;
+        g_block_pause = true;
+        Device.Pause(TRUE, TRUE, TRUE, "CChangeLevelWnd_show");
+        bShowPauseString = false;
+    }
+    else
+    {
+        g_block_pause = false;
+        Device.Pause(FALSE, TRUE, TRUE, "CChangeLevelWnd_hide");
+    }
 }
 
-void CChangeLevelWnd::Hide()
+void CChangeLevelWnd::ShowDialog(bool bDoHideIndicators)
 {
-	g_block_pause							= false;
-	Device.Pause							(FALSE, TRUE, TRUE, "CChangeLevelWnd_hide");
+    m_messageBox->InitMessageBox(m_b_allow_change_level
+        ? "message_box_change_level"
+        : "message_box_change_level_disabled");
+
+    SetWndPos(m_messageBox->GetWndPos());
+    m_messageBox->SetWndPos(Fvector2().set(0.0f, 0.0f));
+    SetWndSize(m_messageBox->GetWndSize());
+
+    m_messageBox->SetText(m_message_str.c_str());
+
+    g_block_pause = true;
+    Device.Pause(TRUE, TRUE, TRUE, "CChangeLevelWnd_show");
+    bShowPauseString = false;
+    inherited::ShowDialog(bDoHideIndicators);
+}
+
+void CChangeLevelWnd::HideDialog()
+{
+    g_block_pause = false;
+    Device.Pause(FALSE, TRUE, TRUE, "CChangeLevelWnd_hide");
+    inherited::HideDialog();
 }
 

@@ -3,6 +3,7 @@
 #include "../xrphysics/PhysicsShell.h"
 #include "PhysicsShellHolder.h"
 #include "game_cl_base.h"
+#include "actor.h"
 
 #include "../Include/xrRender/Kinematics.h"
 #include "../Include/xrRender/KinematicsAnimated.h"
@@ -68,10 +69,22 @@ void CArtefact::Load(LPCSTR section)
 	m_fPowerRestoreSpeed     = pSettings->r_float	(section,"power_restore_speed"		);
 	m_fBleedingRestoreSpeed  = pSettings->r_float	(section,"bleeding_restore_speed"	);
 	
-	if(pSettings->section_exist(pSettings->r_string(section,"hit_absorbation_sect")))
+	
+	LPCSTR hit_sect = pSettings->r_string(section, "hit_absorbation_sect");
+	if(pSettings->section_exist(hit_sect))
 	{
-		m_ArtefactHitImmunities.LoadImmunities(pSettings->r_string(section,"hit_absorbation_sect"),pSettings);
+		m_ArtefactHitImmunities[ALife::eHitTypeBurn] = READ_IF_EXISTS(pSettings, r_float, hit_sect, "burn_immunity",0.f);
+		m_ArtefactHitImmunities[ALife::eHitTypeStrike] = READ_IF_EXISTS(pSettings, r_float, hit_sect, "strike_immunity", 0.f);
+		m_ArtefactHitImmunities[ALife::eHitTypeShock] = READ_IF_EXISTS(pSettings, r_float, hit_sect, "shock_immunity", 0.f);
+		m_ArtefactHitImmunities[ALife::eHitTypeWound] = READ_IF_EXISTS(pSettings, r_float, hit_sect, "wound_immunity", 0.f);
+		m_ArtefactHitImmunities[ALife::eHitTypeRadiation] = READ_IF_EXISTS(pSettings, r_float, hit_sect, "radiation_immunity", 0.f);
+		m_ArtefactHitImmunities[ALife::eHitTypeTelepatic] = READ_IF_EXISTS(pSettings, r_float, hit_sect, "telepathic_immunity", 0.f);
+		m_ArtefactHitImmunities[ALife::eHitTypeChemicalBurn] = READ_IF_EXISTS(pSettings, r_float, hit_sect, "chemical_burn_immunity", 0.f);
+		m_ArtefactHitImmunities[ALife::eHitTypeExplosion] = READ_IF_EXISTS(pSettings, r_float, hit_sect, "explosion_immunity", 0.f);
+		m_ArtefactHitImmunities[ALife::eHitTypeFireWound] = READ_IF_EXISTS(pSettings, r_float, hit_sect, "fire_wound_immunity", 0.f);
+		m_ArtefactHitImmunities[ALife::eHitTypeLightBurn] = m_ArtefactHitImmunities[ALife::eHitTypeBurn];
 	}
+	
 	m_bCanSpawnZone			= !!pSettings->line_exist("artefact_spawn_zones", section);
 	m_af_rank				= pSettings->r_u8(section, "af_rank");
 	m_additional_weight		= pSettings->r_float(section,"additional_inventory_weight");
@@ -413,7 +426,10 @@ void CArtefact::OnStateSwitch(u32 S)
 		}break;
 	case eActivating:
 		{
-			PlayHUDMotion("anm_activate", FALSE, this, S);
+			if (Actor()->HasInfo("lvl_2_artefact"))
+			{
+				PlayHUDMotion("anm_activate", FALSE, this, S);
+			}
 		}break;
 	case eIdle:
 		{
@@ -441,7 +457,7 @@ void CArtefact::OnAnimationEnd(u32 state)
 		}break;
 	case eActivating:
 		{
-			if(Local())
+			if(Local() && Actor()->HasInfo("lvl_2_artefact"))
 			{
 				SwitchState		(eHiding);
 				NET_Packet		P;

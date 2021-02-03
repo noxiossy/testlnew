@@ -141,8 +141,8 @@ void CUIArtefactDetectorSimple::setup_internals()
 	R_ASSERT						(m_flash_bone==BI_NONE);
 	R_ASSERT						(m_on_off_bone==BI_NONE);
 	
-	m_flash_bone					= K->LL_BoneID	("light_bone_2");
-	m_on_off_bone					= K->LL_BoneID	("light_bone_1");
+	m_flash_bone					= K->LL_BoneID	("wpn_body");
+	m_on_off_bone					= K->LL_BoneID	("wpn_body");
 	
 	K->LL_SetBoneVisible			(m_flash_bone,	FALSE, TRUE);
 	K->LL_SetBoneVisible			(m_on_off_bone, TRUE, TRUE);
@@ -173,9 +173,9 @@ void CUIArtefactDetectorSimple::update()
 			m_on_off_light->set_active(true);
 
 		int frame = 0;
-		u32 clr					= m_pOnOfLAnim->CalculateRGB(Device.fTimeGlobal,frame);
+		u32 clr					= m_pOnOfLAnim->CalculateRGB(1.0f,frame);
 		Fcolor					fclr;
 		fclr.set				(clr);
-		m_on_off_light->set_color(fclr);
+		m_on_off_light->set_color(0.41f,0.52f,0.29f);
 	}
 }

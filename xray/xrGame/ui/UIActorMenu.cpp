@@ -88,6 +88,10 @@ void CUIActorMenu::SetMenuMode(EMenuMode mode)
 {
 	SetCurrentItem( NULL );
 	m_hint_wnd->set_text( NULL );
+
+	CActor* actor = smart_cast<CActor*>( m_pActorInvOwner );
+	if ( actor )	{	actor->PickupModeOff();	}
+
 	
 	if ( mode != m_currMenuMode )
 	{
@@ -295,12 +299,18 @@ EDDListType CUIActorMenu::GetListType(CUIDragDropListEx* l)
 	if(l==m_pInventoryOutfitList)		return iActorSlot;
 	if(l==m_pInventoryHelmetList)		return iActorSlot;
 	if(l==m_pInventoryDetectorList)		return iActorSlot;
+
+	if (l == m_pInventoryBinocularList) //--#SM+#--
+        return iActorSlot;
+	if (l == m_pInventoryKnifeList) //--#SM+#--
+        return iActorSlot;
 	
 	if(l==m_pTradeActorBagList)			return iActorBag;
 	if(l==m_pTradeActorList)			return iActorTrade;
 	if(l==m_pTradePartnerBagList)		return iPartnerTradeBag;
 	if(l==m_pTradePartnerList)			return iPartnerTrade;
 	if(l==m_pDeadBodyBagList)			return iDeadBodyBag;
+	if(l==m_pDeadBodyActorBagList)		return iActorBag;
 
 	if(l==m_pQuickSlot)					return iQuickSlot;
 	if(l==m_pTrashList)					return iTrashSlot;
@@ -318,6 +328,8 @@ CUIDragDropListEx* CUIActorMenu::GetListByType(EDDListType t)
 			{
 				if(m_currMenuMode==mmTrade)
 					return m_pTradeActorBagList;
+				else if(m_currMenuMode==mmDeadBodySearch)
+					return m_pDeadBodyActorBagList;
 				else
 					return m_pInventoryBagList;
 			}break;
@@ -466,6 +478,8 @@ void CUIActorMenu::clear_highlight_lists()
 {
 	m_InvSlot2Highlight->Show(false);
 	m_InvSlot3Highlight->Show(false);
+	m_BinocularSlotHighlight->Show(false); //--#SM+#--
+	m_KnifeSlotHighlight->Show(false); //--#SM+#--
 	m_HelmetSlotHighlight->Show(false);
 	m_OutfitSlotHighlight->Show(false);
 	m_DetectorSlotHighlight->Show(false);
@@ -491,6 +505,7 @@ void CUIActorMenu::clear_highlight_lists()
 	case mmUpgrade:
 		break;
 	case mmDeadBodySearch:
+		m_pDeadBodyActorBagList->clear_select_armament();
 		m_pDeadBodyBagList->clear_select_armament();
 		break;
 	}
@@ -512,31 +527,45 @@ void CUIActorMenu::highlight_item_slot(CUICellItem* cell_item)
 	CEatableItem* eatable = smart_cast<CEatableItem*>(item);
 	CArtefact* artefact = smart_cast<CArtefact*>(item);
 
-	if(weapon)
-	{
-		m_InvSlot2Highlight->Show(true);
-		m_InvSlot3Highlight->Show(true);
-		return;
-	}
-	if(helmet)
-	{
-		m_HelmetSlotHighlight->Show(true);
-		return;
-	}
-	if(outfit)
-	{
-		m_OutfitSlotHighlight->Show(true);
-		return;
-	}
-	if(detector)
-	{
-		m_DetectorSlotHighlight->Show(true);
-		return;
-	}
-	if(eatable)
-	{
-		if(cell_item->OwnerList() && GetListType(cell_item->OwnerList())==iQuickSlot)
-			return;
+    //--#SM+ Begin#--
+    u32 item_slot = item->BaseSlot();
+
+    if (weapon && (item_slot == KNIFE_SLOT))
+    {
+        m_KnifeSlotHighlight->Show(true);
+        return;
+    }
+    if (weapon && (item_slot == INV_SLOT_2 || item_slot == INV_SLOT_3))
+    {
+        m_InvSlot2Highlight->Show(true);
+        m_InvSlot3Highlight->Show(true);
+        return;
+    }
+    if (weapon && item_slot == BINOCULAR_SLOT)
+    {
+        m_BinocularSlotHighlight->Show(true);
+        return;
+    }
+    if (helmet && item_slot == HELMET_SLOT)
+    {
+        m_HelmetSlotHighlight->Show(true);
+        return;
+    }
+    if (outfit && item_slot == OUTFIT_SLOT)
+    {
+        m_OutfitSlotHighlight->Show(true);
+        return;
+    }
+    if (detector && item_slot == DETECTOR_SLOT)
+    {
+        m_DetectorSlotHighlight->Show(true);
+        return;
+    }
+    //--#SM+ End#--
+    if (eatable)
+    {
+        if (cell_item->OwnerList() && GetListType(cell_item->OwnerList()) == iQuickSlot)
+            return;
 
 		for(u8 i=0; i<4; i++)
 			m_QuickSlotsHighlight[i]->Show(true);
@@ -581,7 +610,7 @@ void CUIActorMenu::set_highlight_item( CUICellItem* cell_item )
 		}
 	case mmDeadBodySearch:
 		{
-			highlight_armament( item, m_pInventoryBagList );
+			highlight_armament( item, m_pDeadBodyActorBagList );
 			highlight_armament( item, m_pDeadBodyBagList );
 			break;
 		}
@@ -806,10 +835,14 @@ void CUIActorMenu::ClearAllLists()
 	m_pInventoryAutomaticList->ClearAll			(true);
 	m_pQuickSlot->ClearAll						(true);
 
+	m_pInventoryBinocularList->ClearAll(true);
+	m_pInventoryKnifeList->ClearAll(true); //--#SM+#--
+
 	m_pTradeActorBagList->ClearAll				(true);
 	m_pTradeActorList->ClearAll					(true);
 	m_pTradePartnerBagList->ClearAll			(true);
 	m_pTradePartnerList->ClearAll				(true);
+	m_pDeadBodyActorBagList->ClearAll			(true);
 	m_pDeadBodyBagList->ClearAll				(true);
 }
 

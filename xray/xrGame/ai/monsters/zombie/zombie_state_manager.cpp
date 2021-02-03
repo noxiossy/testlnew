@@ -13,9 +13,10 @@
 #include "../states/monster_state_hear_int_sound.h"
 #include "zombie_state_attack_run.h"
 #include "../../../entitycondition.h"
-#include "../../../detail_path_manager.h"
+//#include "../../../detail_path_manager.h"
 #include "../states/monster_state_controlled.h"
 #include "../states/monster_state_help_sound.h"
+#include "vampire/vampire_execute.h"
 
 CStateManagerZombie::CStateManagerZombie(CZombie *obj) : inherited(obj)
 {
@@ -31,15 +32,30 @@ CStateManagerZombie::CStateManagerZombie(CZombie *obj) : inherited(obj)
 	add_state(eStateHearInterestingSound,	xr_new<CStateMonsterHearInterestingSound<CZombie> >(obj));
 	add_state(eStateControlled,				xr_new<CStateMonsterControlled<CZombie> >	(obj));
 	add_state(eStateHearHelpSound,			xr_new<CStateMonsterHearHelpSound<CZombie> >(obj));
+    add_state(eStateVampire_Execute, 		xr_new<CStateZombieVampireExecute<CZombie> >(obj));
 }
 
-CStateManagerZombie::~CStateManagerZombie()
+CStateManagerZombie::~CStateManagerZombie() {}
+
+bool CStateManagerZombie::check_vampire()
 {
+    if (prev_substate != eStateVampire_Execute)
+    {
+        if (get_state(eStateVampire_Execute)->check_start_conditions())
+            return true;
+    }
+    else
+    {
+        if (!get_state(eStateVampire_Execute)->check_completion())
+            return true;
+    }
+	
+    return false;
 }
 
 void CStateManagerZombie::execute()
 {
-	if (object->com_man().ta_is_active()) return;
+	if (object->com_man().ta_is_active() && prev_substate != eStateVampire_Execute) return;
 	
 	u32 state_id = u32(-1);
 	
@@ -47,9 +63,18 @@ void CStateManagerZombie::execute()
 	
 		const CEntityAlive* enemy	= object->EnemyMan.get_enemy();
 
-		if (enemy) {
-			state_id = eStateAttack;
-		} else if (check_state(eStateHearHelpSound)) {
+        if (enemy)
+        {
+            if (check_vampire() && !Actor()->HasInfo("lvl_3_hunter"))
+            {
+                state_id = eStateVampire_Execute;
+            }
+            else
+            {
+                state_id = eStateAttack;
+            }
+        }
+		else if (check_state(eStateHearHelpSound)) {
 			state_id = eStateHearHelpSound;
 		} else if (object->hear_interesting_sound || object->hear_dangerous_sound) {
 			state_id = eStateHearInterestingSound;

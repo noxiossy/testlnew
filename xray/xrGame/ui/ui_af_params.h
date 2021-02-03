@@ -18,7 +18,7 @@ public:
 			void	SetInfo					(const shared_str& af_section);
 
 protected:
-	UIArtefactParamItem*	m_immunity_item[ALife::infl_max_count];
+	UIArtefactParamItem*	m_immunity_item[9];
 	UIArtefactParamItem*	m_restore_item[ALife::eRestoreTypeMax];
 	UIArtefactParamItem*	m_additional_weight;
 

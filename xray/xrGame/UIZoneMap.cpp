@@ -16,6 +16,9 @@
 #include "ui/UIXmlInit.h"
 #include "ui/UIHelper.h"
 #include "ui/UIInventoryUtilities.h"
+#include "UIGameCustom.h"
+#include "ui/UIWindow.h"
+#include "ui/UIActorMenu.h"
 //////////////////////////////////////////////////////////////////////////
 
 CUIZoneMap::CUIZoneMap()
@@ -31,7 +34,23 @@ CUIZoneMap::~CUIZoneMap()
 void CUIZoneMap::Init()
 {
 	CUIXml uiXml;
-	uiXml.Load						(CONFIG_PATH, UI_PATH, "zone_map.xml");
+
+	BOOL  lr_alt_minimap = ( psHUD_Flags.is(HUD_LR_ALT_MINIMAP) );
+	BOOL  lr_alt_minimap_2 = ( psHUD_Flags.is(HUD_LR_ALT_MINIMAP_2) );
+		
+	if(lr_alt_minimap)
+	{
+		uiXml.Load						(CONFIG_PATH, UI_PATH, "zone_map_alt.xml");
+	}
+	else if(lr_alt_minimap_2)
+	{
+		uiXml.Load						(CONFIG_PATH, UI_PATH, "zone_map_alt_2.xml");	
+	}
+	else
+	{
+		uiXml.Load						(CONFIG_PATH, UI_PATH, "zone_map.xml");	
+	}
+
 
 	CUIXmlInit						xml_init;
 	xml_init.InitStatic				(uiXml, "minimap:background",	0, &m_background);
@@ -48,7 +67,7 @@ void CUIZoneMap::Init()
 	xml_init.InitStatic				(uiXml, "minimap:compass", 0, &m_compass);
 	m_background.AttachChild		(&m_compass);
 
-	m_clipFrame.AttachChild			(&m_center);
+	/*m_clipFrame.AttachChild			(&m_center);
 
 	m_Counter_text.SetText( "" );
 	visible = true;
@@ -78,7 +97,7 @@ void CUIZoneMap::Init()
 	Fvector2 cp;
 	cp.x = m_clipFrame.GetWidth()/2.0f;
 	cp.y = m_clipFrame.GetHeight()/2.0f;
-	m_center.SetWndPos		(cp);
+	m_center.SetWndPos		(cp);*/
 
 	Fvector2 rel_pos		= m_compass.GetWndPos();
 	rel_pos.mul				(m_background.GetWndSize());
@@ -95,24 +114,32 @@ void CUIZoneMap::Init()
 		xml_init.InitTextWnd		(uiXml, "minimap:static_counter:text_static", 0, &m_Counter_text);
 		m_Counter.AttachChild		(&m_Counter_text);
 
-		rel_pos						= m_Counter.GetWndPos();
+	/*	rel_pos						= m_Counter.GetWndPos();
 		rel_pos.mul					(m_background.GetWndSize());
-		m_Counter.SetWndPos			(rel_pos);
+		m_Counter.SetWndPos			(rel_pos);*/
 	}
+	
+	m_clipFrame.AttachChild			(&m_center);
+	m_center.SetWndPos				(Fvector2().set(m_clipFrame.GetWidth()/2.0f, m_clipFrame.GetHeight()/2.0f));
 
+	m_Counter_text.SetText( "" );
+	visible = true;
 }
 
 void CUIZoneMap::Render			()
 {
-	if ( !visible )
+	BOOL  lr_draw_minimap = ( psHUD_Flags.is(HUD_LR_DRAW_MINIMAP) );
+	if ( !visible || CurrentGameUI()->ActorMenu().IsShown() || !lr_draw_minimap)
+	{
 		return;
-
+	}
 	m_clipFrame.Draw	();
 	m_background.Draw	();
 }
 
 void CUIZoneMap::Update()
 {
+	if ( !visible ) return;
 	CActor* pActor = smart_cast<CActor*>( Level().CurrentViewEntity() );
 	if ( !pActor ) return;
 

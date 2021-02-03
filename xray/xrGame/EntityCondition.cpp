@@ -11,6 +11,7 @@
 #include "../Include/xrRender/Kinematics.h"
 #include "object_broker.h"
 #include "ActorHelmet.h"
+#include "actor.h"
 
 #define MAX_HEALTH 1.0f
 #define MIN_HEALTH -0.01f
@@ -525,7 +526,14 @@ void CEntityCondition::UpdateHealth()
 	float bleeding_speed		= BleedingSpeed() * m_fDeltaTime * m_change_v.m_fV_Bleeding;
 	m_bIsBleeding				= fis_zero(bleeding_speed)?false:true;
 	m_fDeltaHealth				-= CanBeHarmed() ? bleeding_speed : 0;
-	m_fDeltaHealth				+= m_fDeltaTime * m_change_v.m_fV_HealthRestore;
+	if (Actor()->HasInfo("lvl_1_medic"))
+	{
+		m_fDeltaHealth				+= m_fDeltaTime * m_change_v.m_fV_HealthRestore *1.5;
+	}
+	if (!Actor()->HasInfo("lvl_1_medic"))
+	{
+		m_fDeltaHealth				+= m_fDeltaTime * m_change_v.m_fV_HealthRestore;
+	}
 	
 	VERIFY						(_valid(m_fDeltaHealth));
 	ChangeBleeding				(m_change_v.m_fV_WoundIncarnation * m_fDeltaTime);
@@ -544,9 +552,14 @@ void CEntityCondition::UpdateRadiation()
 {
 	if(m_fRadiation>0)
 	{
-		m_fDeltaRadiation -= m_change_v.m_fV_Radiation*
-							m_fDeltaTime;
-
+		if (Actor()->HasInfo("lvl_1_medic"))
+		{
+			m_fDeltaRadiation -= m_change_v.m_fV_Radiation* m_fDeltaTime *1.5;
+		}
+		if (!Actor()->HasInfo("lvl_1_medic"))
+		{
+			m_fDeltaRadiation -= m_change_v.m_fV_Radiation* m_fDeltaTime;				
+		}
 		m_fDeltaHealth -= CanBeHarmed() ? m_change_v.m_fV_RadiationHealth*m_fRadiation*m_fDeltaTime : 0.0f;
 	}
 }

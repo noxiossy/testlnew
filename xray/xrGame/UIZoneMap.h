@@ -4,7 +4,7 @@
 #include "ui/UIStatic.h"
 
 class CActor;
-class CUIMiniMap;
+class CUICustomMap;
 
 
 class CUIZoneMap
@@ -13,7 +13,7 @@ public:
 	bool						visible;
 
 private:
-	CUIMiniMap*					m_activeMap;
+	CUICustomMap*					m_activeMap;
 
 	CUIStatic					m_background;
 	CUIStatic*					m_clock_wnd;

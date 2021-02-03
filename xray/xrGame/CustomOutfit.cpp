@@ -225,6 +225,19 @@ void	CCustomOutfit::OnMoveToSlot		(const SInvItemPlace& prev)
 	}
 }
 
+void CCustomOutfit::OnH_B_Independent(bool just_before_destroy) 
+{
+	inherited::OnH_B_Independent(just_before_destroy);
+	
+	CActor* pActor = smart_cast<CActor*> (H_Parent());
+		if (pActor)
+		{
+			CTorch* pTorch = smart_cast<CTorch*>(pActor->inventory().ItemFromSlot(TORCH_SLOT));
+			if(pTorch)
+				pTorch->SwitchNightVision(false);
+		}
+}
+
 void CCustomOutfit::ApplySkinModel(CActor* pActor, bool bDress, bool bHUDOnly)
 {
 	if(bDress)
@@ -254,7 +267,9 @@ void CCustomOutfit::ApplySkinModel(CActor* pActor, bool bDress, bool bHUDOnly)
 
 
 		if (pActor == Level().CurrentViewEntity())	
+		{ // LR_DEV CHECK FOR VISUALS
 			g_player_hud->load(pSettings->r_string(cNameSect(),"player_hud_section"));
+		}
 	}else
 	{
 		if (!bHUDOnly && m_ActorVisual.size())

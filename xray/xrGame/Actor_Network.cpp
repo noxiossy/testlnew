@@ -51,6 +51,8 @@
 #	include "../xrPhysics/phvalide.h"
 #endif
 
+#include "ActorCondition.h"
+
 int			g_cl_InterpolationType		= 0;
 u32			g_cl_InterpolationMaxPoints = 0;
 int			g_dwInputUpdateDelta		= 20;
@@ -577,9 +579,9 @@ BOOL CActor::net_Spawn		(CSE_Abstract* DC)
 	unaffected_r_torso.pitch= r_torso.pitch;
 	unaffected_r_torso.roll	= r_torso.roll;
 
-	if( psActorFlags.test(AF_PSP) )
+/*	if( psActorFlags.test(AF_PSP) )
 		cam_Set					(eacLookAt);
-	else
+	else*/
 		cam_Set					(eacFirstEye);
 
 	cam_Active()->Set		(-E->o_torso.yaw,E->o_torso.pitch,0);//E->o_Angle.z);
@@ -673,8 +675,7 @@ BOOL CActor::net_Spawn		(CSE_Abstract* DC)
 	callback.bind	(this,&CActor::on_requested_spawn);
 	m_holder_id				= E->m_holderID;
 	if (E->m_holderID != ALife::_OBJECT_ID(-1))
-		if(!g_dedicated_server)
-			Level().client_spawn_manager().add(E->m_holderID,ID(),callback);
+		Level().client_spawn_manager().add(E->m_holderID,ID(),callback);
 	//F
 	//-------------------------------------------------------------
 	m_iLastHitterID = u16(-1);
@@ -709,13 +710,10 @@ void CActor::net_Destroy	()
 	inherited::net_Destroy	();
 
 	if (m_holder_id != ALife::_OBJECT_ID(-1))
-		if(!g_dedicated_server)
-			Level().client_spawn_manager().remove	(m_holder_id,ID());
-
+		Level().client_spawn_manager().remove	(m_holder_id,ID());
 	delete_data				(m_statistic_manager);
 	
-	if(!g_dedicated_server)
-		Level().MapManager		().OnObjectDestroyNotify(ID());
+	Level().MapManager		().OnObjectDestroyNotify(ID());
 
 #pragma todo("Dima to MadMax : do not comment inventory owner net_Destroy!!!")
 	CInventoryOwner::net_Destroy();
@@ -776,8 +774,7 @@ void CActor::net_Relcase	(CObject* O)
 	}
 	inherited::net_Relcase	(O);
 
-	if (!g_dedicated_server)
-		memory().remove_links(O);
+	memory().remove_links(O);
 
 	m_pPhysics_support->in_NetRelcase(O);
 
@@ -838,7 +835,7 @@ void	CActor::OnChangeVisual()
 		CStepManager::reload(cNameSect().c_str());
 		SetCallbacks		();
 		m_anims->Create		(V);
-//.		m_vehicle_anims->Create			(V);
+		m_vehicle_anims->Create			(V);
 		CDamageManager::reload(*cNameSect(),"damage",pSettings);
 		//-------------------------------------------------------------------------------
 		m_head				= smart_cast<IKinematics*>(Visual())->LL_BoneID("bip01_head");
@@ -1350,10 +1347,27 @@ void CActor::save(NET_Packet &output_packet)
 	output_packet.w_u8(task_wnd->IsSecondaryTasksEnabled() ? 1 : 0);
 	output_packet.w_u8(task_wnd->IsPrimaryObjectsEnabled() ? 1 : 0);
 
+	output_packet.w_float(m_fJumpSpeed);
+	output_packet.w_float(m_fCrouchFactor);
+	output_packet.w_float(m_fClimbFactor);
+	output_packet.w_float(m_fRunFactor);
+	output_packet.w_float(m_fSprintFactor);
+	output_packet.w_float(m_fRunBackFactor);
+	output_packet.w_float(m_fWalkBackFactor);
+	output_packet.w_float(m_WeightForScripts);
+
 	output_packet.w_stringZ(g_quick_use_slots[0]);
 	output_packet.w_stringZ(g_quick_use_slots[1]);
 	output_packet.w_stringZ(g_quick_use_slots[2]);
 	output_packet.w_stringZ(g_quick_use_slots[3]);
+
+	/*int cnt = cooldownSections.size();
+	for (int i = 0; i < cnt; i++)
+		output_packet.w_stringZ(cooldownSections[i]);
+
+	cnt = cooldownTimes.size();
+	for (int i = 0; i < cnt; i++)
+		output_packet.w_u32(cooldownTimes[i]);*/
 }
 
 void CActor::load(IReader &input_packet)
@@ -1367,11 +1381,33 @@ void CActor::load(IReader &input_packet)
 	task_wnd->SecondaryTasksEnabled(!!input_packet.r_u8());
 	task_wnd->PrimaryObjectsEnabled(!!input_packet.r_u8());
 	//need_quick_slot_reload = true;
+	
+	m_fJumpSpeed = input_packet.r_float();
+	character_physics_support()->movement()->SetJumpUpVelocity(m_fJumpSpeed);
+
+	m_fCrouchFactor = input_packet.r_float();
+	m_fClimbFactor = input_packet.r_float();
+	m_fRunFactor = input_packet.r_float();
+	m_fSprintFactor = input_packet.r_float();
+	m_fRunBackFactor = input_packet.r_float();
+	m_fWalkBackFactor = input_packet.r_float();
+
+	m_WeightForScripts = input_packet.r_float();
+	Actor()->inventory().SetMaxWeight(m_WeightForScripts);
+	Actor()->m_entity_condition->m_MaxWalkWeight = m_WeightForScripts + 5.f;
 
 	input_packet.r_stringZ(g_quick_use_slots[0], sizeof(g_quick_use_slots[0]));
 	input_packet.r_stringZ(g_quick_use_slots[1], sizeof(g_quick_use_slots[1]));
 	input_packet.r_stringZ(g_quick_use_slots[2], sizeof(g_quick_use_slots[2]));
 	input_packet.r_stringZ(g_quick_use_slots[3], sizeof(g_quick_use_slots[3]));
+
+	/*int cnt = cooldownSections.size();
+	for (int i = 0; i < cnt; i++)
+		input_packet.r_stringZ(cooldownSections[i]);
+
+	cnt = cooldownTimes.size();
+	for (int i = 0; i < cnt; i++)
+		cooldownTimes[i] = input_packet.r_u32();*/
 }
 
 #ifdef DEBUG

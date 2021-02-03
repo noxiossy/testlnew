@@ -33,8 +33,35 @@
 #include "clsid_game.h"
 #include "hudmanager.h"
 #include "Weapon.h"
+#include "script_game_object.h"
+#include <luabind/functor.hpp>
 
 extern u32 hud_adj_mode;
+
+void CActor::CallbackInput(int DIK, int mode)
+{
+	if (mode == 1)
+	{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("rietmon_callbacks.on_button_press",functor); 
+		functor(DIK);
+	}
+
+	else if (mode == 2)
+	{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("rietmon_callbacks.on_button_hold",functor); 
+		functor(DIK);
+	}
+	
+	else if (mode == 3)
+	{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("rietmon_callbacks.on_button_up",functor); 
+		functor(DIK);
+	}
+}
+
 
 void CActor::IR_OnKeyboardPress(int cmd)
 {
@@ -49,6 +76,12 @@ void CActor::IR_OnKeyboardPress(int cmd)
 	{
 	case kWPN_FIRE:
 		{
+			if (Actor()->HasInfo("anim_input") || Actor()->HasInfo("kick")) return ;
+
+			luabind::functor<void> functor;
+			ai().script_engine().functor("leer_scr.doll_attack",functor);
+			functor(1);			
+
 			if( (mstate_wishful & mcLookout) && !IsGameTypeSingle() ) return;
 
 			u16 slot = inventory().GetActiveSlot();
@@ -70,6 +103,43 @@ void CActor::IR_OnKeyboardPress(int cmd)
 
 	if (!g_Alive()) return;
 
+	switch (cmd)
+	{
+		case kNIGHT_VISION:
+		{
+							  luabindex::functor<void> functor;
+							  ai().script_engine().functor("leer_scr.brain_use",functor);
+							  functor(1);
+							  SwitchNightVision();
+							  break;
+		};
+		case kQUICK_USE_1:
+		case kQUICK_USE_2:
+		case kQUICK_USE_3:
+		case kQUICK_USE_4:
+		{
+			if (Actor()->HasInfo("anim_input") || Actor()->HasInfo("kek")) return ;
+			const shared_str& item_name		= g_quick_use_slots[cmd-kQUICK_USE_1];
+			if(item_name.size())
+			{
+				PIItem itm = inventory().GetAny(item_name.c_str());
+
+				if(itm)
+				{
+					if (IsGameTypeSingle())
+					{
+						inventory().Eat				(itm);
+					} else
+					{
+						inventory().ClientEat		(itm);
+					}
+					CurrentGameUI()->ActorMenu().m_pQuickSlot->ReloadReferences(this);
+				}
+			}
+		}break;
+	};		
+		
+		
 	if(m_holder && kUSE != cmd)
 	{
 		m_holder->OnKeyboardPress			(cmd);
@@ -90,11 +160,18 @@ void CActor::IR_OnKeyboardPress(int cmd)
 	case kJUMP:		
 		{
 			mstate_wishful |= mcJump;
-		}break;
+		} break;
+
 	case kSPRINT_TOGGLE:	
+	{
+		CWeapon* pWeapon = smart_cast<CWeapon*>(inventory().ActiveItem());
+		if (pWeapon && pWeapon->GetState() == CWeapon::EWeaponStates::eReload || Actor()->HasInfo("spec_grav_art"))
 		{
-			mstate_wishful ^= mcSprint;
-		}break;
+			return;
+		}
+
+		mstate_wishful ^= mcSprint;
+	} break;
 	case kCROUCH:	
 		{
 		if( psActorFlags.test(AF_CROUCH_TOGGLE) )
@@ -103,14 +180,32 @@ void CActor::IR_OnKeyboardPress(int cmd)
 	case kCAM_1:	cam_Set			(eacFirstEye);				break;
 	case kCAM_2:	cam_Set			(eacLookAt);				break;
 	case kCAM_3:	cam_Set			(eacFreeLook);				break;
-	case kNIGHT_VISION:
+	/*case kNIGHT_VISION:
 		{
 			SwitchNightVision();
 			break;
-		}
+		}*/
 	case kTORCH:
 		{
 			SwitchTorch();
+			break;
+		}
+
+	case kLRKICK:
+		{
+			if (Actor()->HasInfo("anim_input") || Actor()->HasInfo("kek")) return ;
+			luabind::functor<void> functor;
+			ai().script_engine().functor("leer_scr.quick_kick_check",functor);
+			functor(1);
+			break;
+		}
+
+	case kLRGREN:
+		{
+			if (Actor()->HasInfo("anim_input") || Actor()->HasInfo("kek")) return ;
+			luabind::functor<void> functor;
+			ai().script_engine().functor("leer_scr.quick_gren_check",functor);
+			functor(1);
 			break;
 		}
 
@@ -144,6 +239,7 @@ void CActor::IR_OnKeyboardPress(int cmd)
 		}break;
 */
 	case kUSE:
+		if (Actor()->HasInfo("anim_input") || Actor()->HasInfo("kek")) return ;
 		ActorUse();
 		break;
 	case kDROP:
@@ -152,14 +248,16 @@ void CActor::IR_OnKeyboardPress(int cmd)
 		break;
 	case kNEXT_SLOT:
 		{
+			if (Actor()->HasInfo("anim_input") || Actor()->HasInfo("kek")) return ;
 			OnNextWeaponSlot();
 		}break;
 	case kPREV_SLOT:
 		{
+			if (Actor()->HasInfo("anim_input") || Actor()->HasInfo("kek")) return ;
 			OnPrevWeaponSlot();
 		}break;
 
-	case kQUICK_USE_1:
+	/*case kQUICK_USE_1:
 	case kQUICK_USE_2:
 	case kQUICK_USE_3:
 	case kQUICK_USE_4:
@@ -187,7 +285,7 @@ void CActor::IR_OnKeyboardPress(int cmd)
 					CurrentGameUI()->ActorMenu().m_pQuickSlot->ReloadReferences(this);
 				}
 			}
-		}break;
+		}break;*/
 	}
 }
 
@@ -218,6 +316,10 @@ void CActor::IR_OnKeyboardRelease(int cmd)
 
 	if (g_Alive())	
 	{
+        if (cmd == kUSE && !psActorFlags.test(AF_MULTI_ITEM_PICKUP)) 
+			m_bPickupMode = false;
+			//PickupModeOff();
+
 		if(m_holder)
 		{
 			m_holder->OnKeyboardRelease(cmd);
@@ -232,7 +334,7 @@ void CActor::IR_OnKeyboardRelease(int cmd)
 		switch(cmd)
 		{
 		case kJUMP:		mstate_wishful &=~mcJump;		break;
-		case kDROP:		if(GAME_PHASE_INPROGRESS == Game().Phase()) g_PerformDrop();				break;
+		case kDROP:		if(GAME_PHASE_INPROGRESS == Game().Phase() && !Actor()->HasInfo("anim_input")) g_PerformDrop();				break;
 		}
 	}
 }
@@ -281,6 +383,12 @@ void CActor::IR_OnKeyboardHold(int cmd)
 	case kBACK:		mstate_wishful |= mcBack;									break;
 	case kCROUCH:
 		{
+			if (Actor()->HasInfo("allow_feel") && Actor()->HasInfo("lvl_3_feel"))
+			{
+			luabind::functor<void> functor;
+			ai().script_engine().functor("leer_scr.tlou",functor);
+			functor(1);	
+			}	
 			if( !psActorFlags.test(AF_CROUCH_TOGGLE) )
 					mstate_wishful |= mcCrouch;
 
@@ -380,7 +488,10 @@ void CActor::ActorUse()
 		CGameObject::u_EventSend	(P);
 		return;
 	}
-				
+	
+    if (!psActorFlags.test(AF_MULTI_ITEM_PICKUP))
+        m_bPickupMode = true;
+	
 	if(character_physics_support()->movement()->PHCapture())
 		character_physics_support()->movement()->PHReleaseObject();
 
@@ -428,7 +539,7 @@ void CActor::ActorUse()
 						if ( !m_pPersonWeLookingAt->deadbody_closed_status() )
 						{
 							if(pEntityAliveWeLookingAt->AlreadyDie() && 
-								pEntityAliveWeLookingAt->GetLevelDeathTime()+3000 < Device.dwTimeGlobal)
+								pEntityAliveWeLookingAt->GetLevelDeathTime()+1000 < Device.dwTimeGlobal)
 								// 99.9% dead
 								pGameSP->StartCarBody(this, m_pPersonWeLookingAt );
 						}
@@ -622,7 +733,7 @@ void CActor::SwitchTorch()
 	for ( ; it != it_e; ++it )
 	{
 		CTorch* torch = smart_cast<CTorch*>(*it);
-		if ( torch )
+		if ( torch && !Actor()->HasInfo("block_torch") && !Actor()->HasInfo("block_torch_switch"))
 		{		
 			torch->Switch();
 			return;

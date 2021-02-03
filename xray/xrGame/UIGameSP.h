@@ -65,7 +65,8 @@ public:
 	virtual				~CChangeLevelWnd			()									{};
 	virtual void		SendMessage					(CUIWindow *pWnd, s16 msg, void *pData);
 	virtual bool		WorkInPause					()const {return true;}
-	virtual void		Show						();
-	virtual void		Hide						();
+	void Show(bool status) override;
+	void ShowDialog(bool bDoHideIndicators) override;
+	void HideDialog() override;
 	virtual bool		OnKeyboardAction					(int dik, EUIMessages keyboard_action);
 };

@@ -34,6 +34,8 @@ _action  actions[]		= {
 	{ "cam_zoom_out",		kCAM_ZOOM_OUT			,_both},	
 															
 	{ "torch",				kTORCH					,_both},	
+	{ "lr_kick",			kLRKICK					,_both},	
+	{ "lr_gren",			kLRGREN					,_both},	
 	{ "night_vision",		kNIGHT_VISION			,_both},	
 	{ "show_detector",		kDETECTOR				,_sp},		
 

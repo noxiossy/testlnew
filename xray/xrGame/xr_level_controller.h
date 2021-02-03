@@ -26,6 +26,8 @@ enum	EGameActions
 	kCAM_ZOOM_OUT,
 						
 	kTORCH,
+	kLRKICK,
+	kLRGREN,
 	kNIGHT_VISION,
 	kDETECTOR,
 	kWPN_1,

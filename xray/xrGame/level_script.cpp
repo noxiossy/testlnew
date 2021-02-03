@@ -9,6 +9,7 @@
 #include "pch_script.h"
 #include "level.h"
 #include "actor.h"
+#include "ActorCondition.h"
 #include "script_game_object.h"
 #include "patrol_path_storage.h"
 #include "xrServer.h"
@@ -36,6 +37,20 @@
 #include "ui/UIInventoryUtilities.h"
 #include "alife_object_registry.h"
 #include "xrServer_Objects_ALife_Monsters.h"
+#include "ui/UItalkDialogWnd.h"
+#include "inventory.h"
+#include "HudItem.h"
+#include "Weapon.h"
+#include "WeaponMagazined.h"
+#include "ai/stalker/ai_stalker.h"
+#include "ai/monsters/basemonster/base_monster.h"
+#include "..\xrServerEntities\xrServer_Objects_ALife_Monsters.h"
+#include "../xrEngine/CameraBase.h"
+#include "Level_Bullet_Manager.h"
+#include "UIGameCustom.h"
+#include "Missile.h"
+#include "restriction_space.h"
+#define DEPRECATE(OLD, NEW) Msg("!!! Method %s is deprecated. Use %s", OLD, NEW);
 
 using namespace luabind;
 
@@ -226,6 +241,11 @@ float high_cover_in_direction(u32 level_vertex_id, const Fvector &direction)
 
 float low_cover_in_direction(u32 level_vertex_id, const Fvector &direction)
 {
+	if (!ai().level_graph().valid_vertex_id(level_vertex_id))
+	{
+		return 0;
+	}
+
 	float			y,p;
 	direction.getHP	(y,p);
 	return			(ai().level_graph().low_cover_in_direction(y,level_vertex_id));
@@ -238,6 +258,10 @@ float rain_factor()
 
 u32	vertex_in_direction(u32 level_vertex_id, Fvector direction, float max_distance)
 {
+	if (!ai().level_graph().valid_vertex_id(level_vertex_id))
+	{
+		return u32(-1);
+	}
 	direction.normalize_safe();
 	direction.mul	(max_distance);
 	Fvector			start_position = ai().level_graph().vertex_position(level_vertex_id);
@@ -249,6 +273,10 @@ u32	vertex_in_direction(u32 level_vertex_id, Fvector direction, float max_distan
 
 Fvector vertex_position(u32 level_vertex_id)
 {
+	if (!ai().level_graph().valid_vertex_id(level_vertex_id))
+	{
+		return Fvector{};
+	}
 	return			(ai().level_graph().vertex_position(level_vertex_id));
 }
 
@@ -704,7 +732,360 @@ bool has_active_tutotial()
 	return (g_tutorial!=NULL);
 }
 
+// RIETMON
 
+LPCSTR GetActorName()
+{
+	return Actor()->m_game_name.c_str();
+}
+
+void SetActorName(LPCSTR name)
+{
+	Actor()->m_game_name = name;
+}
+
+void Writef(LPCSTR msg)
+{
+	Log("!Script: ", msg);
+}
+
+void SetCharacterName(CSE_ALifeTraderAbstract* p, LPCSTR name)
+{
+	p->m_character_name = name;
+}
+
+float GetActorParam(int num)
+{
+	if (num == 1) return Actor()->m_fJumpSpeed;
+	if (num == 2) return Actor()->m_fCrouchFactor;
+	if (num == 3) return Actor()->m_fClimbFactor;
+	if (num == 4) return Actor()->m_fRunFactor;
+	if (num == 5) return Actor()->m_fSprintFactor;
+	if (num == 6) return Actor()->m_fRunBackFactor;
+	if (num == 7) return Actor()->m_fWalkBackFactor;
+}
+
+void SetActorParam(int par, float num)
+{
+	Actor()->ChangeParam(par, num);
+}
+
+float GetActorMaxWeight()
+{
+	return (Actor()->inventory().GetMaxWeight());
+}
+void SetActorMaxWeight(float max_weight)
+{
+	Actor()->inventory().SetMaxWeight(max_weight);
+	Actor()->m_entity_condition->m_MaxWalkWeight = max_weight + 5.f;
+	Actor()->m_WeightForScripts = max_weight;
+}
+//Leer
+void spawn_anomaly(LPCSTR str, int level_vertex_id, const Fvector &position, float rad)
+{
+	VERIFY(!physics_world()->Processing());
+	string128 tmp;
+	VERIFY3(3 == _GetItemCount(str), "Bad record format in artefact_spawn_zones", str);
+	float zone_radius = (float)atof(_GetItem(str, 1, tmp));
+	LPCSTR zone_sect = _GetItem(str, 0, tmp);
+
+	CSE_Abstract		*object = Level().spawn_item(zone_sect,
+		position,
+		level_vertex_id,
+		0xffff,
+		true
+		);
+	CSE_ALifeAnomalousZone*		AlifeZone = smart_cast<CSE_ALifeAnomalousZone*>(object);
+	VERIFY(AlifeZone);
+	CShapeData::shape_def		_shape;
+	_shape.data.sphere.P.set(0.0f, 0.0f, 0.0f);
+	_shape.data.sphere.R = rad;
+	_shape.type = CShapeData::cfSphere;
+	AlifeZone->assign_shapes(&_shape, 1);
+	AlifeZone->m_owner_id		= 0;
+	AlifeZone->m_space_restrictor_type = RestrictionSpace::eRestrictorTypeNone;
+
+	NET_Packet					P;
+	object->Spawn_Write(P, TRUE);
+	Level().Send(P, net_flags(TRUE));
+	F_entity_Destroy(object);
+}
+
+float GetCurrentOutfitCondition()
+{
+	return Actor()->inventory().ItemFromSlot(OUTFIT_SLOT)->cast_inventory_item()->GetCondition();
+}
+float GetCurrentFov()
+{
+	return (Actor()->currentFOV());
+}
+float GetCurrentHudFov()
+{
+	return (Actor()->inventory().ItemFromSlot(Actor()->inventory().GetActiveSlot())->cast_weapon()->GetHudFov());
+}
+bool WpnIsReload()
+{
+	return Actor()->inventory().ItemFromSlot(Actor()->inventory().GetActiveSlot())->cast_weapon()->IsReload();
+}
+bool WpnIsZoomed()
+{
+	return Actor()->inventory().ItemFromSlot(Actor()->inventory().GetActiveSlot())->cast_weapon()->IsZoomed();
+}
+u32 ActorIsElephant()
+{
+	return Actor()->MovingState();
+}
+bool WpnIsFire()
+{
+	return Actor()->inventory().ItemFromSlot(Actor()->inventory().GetActiveSlot())->cast_weapon()->IsFire();
+}
+void ReloadWpn()
+{
+	auto weapon = Actor()->inventory().ItemFromSlot(Actor()->inventory().GetActiveSlot())->cast_weapon();
+
+	if (weapon) 
+	{
+		auto magazine = weapon->cast_weapon_magazined();
+		if (magazine) 
+		{
+			magazine->Reload();
+		}
+	}	
+}	
+void ExplodeWpn()
+{
+	auto weapon = Actor()->inventory().ItemFromSlot(Actor()->inventory().GetActiveSlot())->cast_weapon();
+
+	if (weapon) 
+	{
+		auto magazine = weapon->cast_weapon_magazined();
+		if (magazine) 
+		{
+			magazine->Explosion();
+		}
+	}	
+}
+void ThrowMissile()
+{
+	auto grenka = Actor()->inventory().ItemFromSlot(Actor()->inventory().GetActiveSlot())->cast_missile();
+	if (grenka)
+	{
+		grenka->StartThrow();
+	}
+}
+void BlockBoltSlot()
+{
+		Actor()->inventory().BlockSlot(BOLT_SLOT);
+}
+void UnBlockBoltSlot()
+{
+		Actor()->inventory().UnblockSlot(BOLT_SLOT);
+}
+/////////////////////////////
+
+#include "../xrcdb/xr_collide_defs.h"
+#include "HUDManager.h"
+#include <WeaponKnife.h>
+
+CScriptGameObject* GetTargetObject()
+{
+	collide::rq_result& RQ = HUD().GetCurrentRayQuery();
+	if (RQ.O)
+	{
+		CGameObject	*game_object = static_cast<CGameObject*>(RQ.O);
+		if (game_object)
+			return game_object->lua_game_object();
+	}
+	return (0);
+}
+
+float GetDistanceToTargetObject()
+{
+	collide::rq_result& RQ = HUD().GetCurrentRayQuery();
+	if (RQ.range)
+		return RQ.range;
+	return (0);
+}
+
+/*CScriptGameObject *GetObjectByName(LPCSTR objName)
+{
+	CGameObject		*l_tpGameObject	= smart_cast<CGameObject*>(Level().Objects.FindObjectByName(objName));
+	if (l_tpGameObject)
+		return		(l_tpGameObject->lua_game_object());
+	else
+		return		(0);
+}*/
+
+void AddForce(CScriptGameObject* object, float dirX, float dirY, float dirZ)
+{
+	if (!object) R_ASSERT("Fuck you! Object, which need to add force equals a nullptr!");
+
+	CObject* obj = smart_cast<CObject*>(&object->object());
+
+	if (!obj) return;
+
+	CPhysicsShellHolder* objHolder = smart_cast<CPhysicsShellHolder*>(obj);
+
+	Fvector forceDirection, 
+		dir, 
+		pos = object->Position();
+	dir.set(dirX, dirY, dirZ);
+	forceDirection.sub(pos, dir);
+	
+	if (objHolder && objHolder->m_pPhysicsShell)
+		objHolder->m_pPhysicsShell->applyImpulse(forceDirection, objHolder->GetMass());
+}
+
+void Shot()
+{
+	DEPRECATE("Shot", "FireAction");
+	CWeapon* activeWeapon = Actor()->inventory().ItemFromSlot(Actor()->inventory().GetActiveSlot())->cast_weapon();
+	if (activeWeapon)
+	{
+		CWeaponMagazined* weapon = activeWeapon->cast_weapon_magazined();
+		if (weapon && weapon->GetAmmoElapsed() > 0)
+		{
+			weapon->FireStart();
+			weapon->FireEnd();
+		}
+	}
+}
+void FireAction() 
+{
+	auto weapon = Actor()->inventory().ItemFromSlot(Actor()->inventory().GetActiveSlot())->cast_weapon();
+
+	if (weapon) 
+	{
+		auto magazine = weapon->cast_weapon_magazined();
+		if (magazine) 
+		{
+			if (magazine->GetAmmoElapsed() == 0) return;
+
+			magazine->FireStart();
+			magazine->FireEnd();
+		}
+		else
+		{
+			auto knife = smart_cast<CWeaponKnife*>(weapon);
+			if (knife)
+				knife->FireStart();
+			else
+			{
+				auto throwable = weapon->cast_missile();
+				if (throwable)
+					throwable->Throw();
+			}
+		}
+	}
+}
+
+void CallGameOver()
+{
+	//Actor()->cam_Set(eacFreeLook);
+	CurrentGameUI()->HideShownDialogs();
+	start_tutorial("game_over");
+}
+
+extern bool g_block_pause;
+void CallPause()
+{
+	#ifdef INGAME_EDITOR
+			if (Device.editor())	return;
+		#endif // INGAME_EDITOR
+
+		if (!g_block_pause && (IsGameTypeSingle()))
+		{
+#ifdef DEBUG
+			if(psActorFlags.test(AF_NO_CLIP))
+				Device.Pause(!Device.Paused(), TRUE, TRUE, "li_pause_key_no_clip");
+			else
+#endif //DEBUG
+				Device.Pause(!Device.Paused(), TRUE, TRUE, "li_pause_key");
+		}
+		return;
+}
+
+// Nearest objects
+xr_vector<CObject*> nearestObjects; 
+
+void SetNearestObjects(float radius)
+{
+	Level().ObjectSpace.GetNearest(nearestObjects, Actor()->Position(), radius, NULL); 
+}
+
+int GetCountNearestObject()
+{
+	return nearestObjects.size();
+}
+
+CScriptGameObject* GetNearestObjectByIndex(int index)
+{
+	return smart_cast<CGameObject*>(nearestObjects[index])->lua_game_object();
+}
+
+void PlayActiveObjectAnimation(LPCSTR name)
+{
+	CHudItem* object = Actor()->inventory().ItemFromSlot(Actor()->inventory().GetActiveSlot())->cast_hud_item();
+	if (object)
+		object->PlayHUDMotion(name, TRUE, object, object->GetState());
+}
+
+void ActorLookAt(float x, float y, float z)
+{
+	CCameraBase* camera = Actor()->cam_Active();
+
+	VERIFY2(camera, "ÎËÓÕÈ ÁËßÒÜ, ÊÀÌÅÐÛ ÍÅÒÓ, ÊÓÄÀ ÂÛ ÅÅ ÏÐÎÁÅÀËÈ?!");
+
+	Fvector dir = Fvector();
+
+	dir.set(x != 666 ? x : camera->pitch,
+		y != 666 ? y : camera->yaw,
+		z != 666 ? z : camera->roll);
+
+	camera->Set(dir.y, dir.x, dir.z);
+}
+
+// By Ekagors (ekagors(eKaGoRs))
+void CreateBullet(CScriptGameObject* owner, Fvector pos, Fvector dir, float speed, float hitPower, float hitImpulse,
+	LPCSTR ammoClass, bool sendHit, float fireDistance, float airResistance)
+{
+	CCartridge cartridge;
+	cartridge.Load(ammoClass, 0);
+
+	u16 parent = owner->object().H_Parent() ? owner->object().H_Parent()->ID() : owner->object().ID();
+
+	Level().BulletManager().AddBullet(pos, dir, speed, hitPower, hitImpulse, parent, owner->object().ID(),
+		ALife::eHitTypeFireWound, fireDistance, cartridge, airResistance,
+		sendHit,
+		true);
+}
+
+CUIGameCustom* GetCurrentUI()
+{
+	return CurrentGameUI();
+}
+
+#include "CharacterPhysicsSupport.h"
+#include "../xrCore/_fbox.h"
+
+void SetActorPHBox(int boxNumber, Fvector position, Fvector size) 
+{
+	Fbox box;
+
+	box.set(position, position);
+	box.grow(size);
+
+	Actor()->character_physics_support()->movement()->SetBox(boxNumber, box);
+	Actor()->character_physics_support()->movement()->ActivateBox(boxNumber);
+}
+
+
+Fvector GetActorPHBoxSize(int boxNumber)
+{
+	Fvector size;
+	Actor()->character_physics_support()->movement()->Boxes()[boxNumber].getsize(size);
+	return size;
+}
 
 #pragma optimize("s",on)
 void CLevel::script_register(lua_State *L)
@@ -715,6 +1096,53 @@ void CLevel::script_register(lua_State *L)
 
 	class_<CEnvironment>("CEnvironment")
 		.def("current",							current_environment);
+
+	module(L,"Rietmon")
+	[
+		def("GetActorName",						GetActorName),
+		def("SetActorName",						SetActorName),
+		def("Writef",							Writef),
+		def("SetCharacterName",					SetCharacterName),
+		def("GetActorParam",					GetActorParam),
+		def("SetActorParam",					SetActorParam),
+		def("GetActorMaxWeight",				GetActorMaxWeight),
+		def("SetActorMaxWeight",				SetActorMaxWeight),
+		def("GetTargetObject",					GetTargetObject),
+		def("GetDistanceToTargetObject",		GetDistanceToTargetObject),
+		//def("GetObjectByName",					GetObjectByName),
+		def("AddForce",							AddForce),
+		def("Shot",								Shot),
+		def("FireAction",						FireAction),
+		def("CallGameOver",						CallGameOver),
+		def("SetNearestObjects",				SetNearestObjects),
+		def("GetCountNearestObject",			GetCountNearestObject),
+		def("GetNearestObjectByIndex",			GetNearestObjectByIndex),
+		def("PlayActiveObjectAnimation",		PlayActiveObjectAnimation),
+		def("ActorLookAt",						ActorLookAt),
+		//def("SetCooldown",						SetCooldown),
+		//def("GetCooldownTime",					GetCooldownTime),
+		def("CreateBullet",						CreateBullet),
+		def("GetCurrentUI",						GetCurrentUI),
+		def("GetCurrentFov",					GetCurrentFov),
+		def("ReloadWpn",						ReloadWpn),
+		def("ExplodeWpn",						ExplodeWpn),
+		def("WpnIsFire",						WpnIsFire),
+		def("WpnIsReload",						WpnIsReload),
+		def("WpnIsZoomed",						WpnIsZoomed),
+		def("ThrowMissile",						ThrowMissile),
+		def("GetCurrentHudFov",					GetCurrentHudFov),
+		def("SetActorPHBox",					SetActorPHBox),
+		def("BlockBoltSlot",					BlockBoltSlot),
+		def("UnBlockBoltSlot",					UnBlockBoltSlot),
+		def("GetCurrentOutfitCondition",		GetCurrentOutfitCondition),
+		def("GetActorPHBoxSize",				GetActorPHBoxSize)
+	];
+	
+	module(L,"leer")
+	[
+		def("CallPause",						CallPause),
+		def("spawn_anomaly",						spawn_anomaly)
+	];
 
 	module(L,"level")
 	[
@@ -735,7 +1163,7 @@ void CLevel::script_register(lua_State *L)
 		def("stop_weather_fx",					stop_weather_fx),
 
 		def("environment",						environment),
-		
+		def("ActorIsElephant",						ActorIsElephant),
 		def("set_time_factor",					set_time_factor),
 		def("get_time_factor",					get_time_factor),
 

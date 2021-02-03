@@ -85,9 +85,13 @@ void CStateManagerDog::execute()
 			switch ( object->EnemyMan.get_danger_type() ) 
 			{
 				case eStrong: state_id = eStatePanic;  break;
-				case eWeak:   state_id = eStateAttack; break;
+				case eWeak: if(Actor()->HasInfo("fearless_dog"))
+				{
+					state_id = eStateAttack; break;
+				}
+					state_id = eStatePanic;break;		
 			}
-			if ( state_id == eStatePanic && squad->squad_alife_count() > 2 )
+			if ( state_id == eStatePanic && squad->squad_alife_count() > 2 && (!Actor()->HasInfo("special_art")) )
 			{
 				state_id = eStateAttack;
 			}

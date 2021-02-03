@@ -487,6 +487,10 @@ void CGamePersistent::game_loaded()
 			VERIFY				(NULL==m_intro);
 			m_intro				= xr_new<CUISequencer>();
 			m_intro->Start		("game_loaded");
+			luabind::functor<LPCSTR> functor;
+			ai().script_engine().functor("rietmon_callbacks.on_level_load",functor);
+			if (g_pGameLevel)
+				functor(g_pGameLevel->name().c_str());
 			Msg					("intro_start game_loaded");
 			m_intro->m_on_destroy_event.bind(this, &CGamePersistent::update_game_loaded);
 		}
@@ -518,6 +522,9 @@ void CGamePersistent::start_game_intro		()
 			m_intro				= xr_new<CUISequencer>();
 			m_intro->Start		("intro_game");
 			Msg("intro_start intro_game");
+			luabind::functor<LPCSTR> functor;
+			ai().script_engine().functor("rietmon_callbacks.on_new_game",functor); 
+			functor(g_pGameLevel->name().c_str());
 		}
 	}
 }

@@ -52,6 +52,11 @@ void CUIActorMenu::Construct()
 	xml_init.InitWindow					(uiXml, "main", 0, this);
 	m_hint_wnd = UIHelper::CreateHint	(uiXml, "hint_wnd");
 
+	m_LRBackground						= xr_new<CUIStatic>();
+	m_LRBackground->SetAutoDelete		(true);
+	AttachChild							(m_LRBackground);
+	xml_init.InitStatic					(uiXml, "lr_background", 0, m_LRBackground);
+	
 	m_LeftBackground					= xr_new<CUIStatic>();
 	m_LeftBackground->SetAutoDelete		(true);
 	AttachChild							(m_LeftBackground);
@@ -108,6 +113,10 @@ void CUIActorMenu::Construct()
 	m_QuickSlotsHighlight[0]	->Show(false);
 	m_ArtefactSlotsHighlight[0]	= UIHelper::CreateStatic(uiXml, "artefact_slot_highlight", this);
 	m_ArtefactSlotsHighlight[0]	->Show(false);
+	m_BinocularSlotHighlight = UIHelper::CreateStatic(uiXml, "binocular_slot_highlight", this); //--#SM+#--
+    m_BinocularSlotHighlight->Show(false); //--#SM+#--
+	m_KnifeSlotHighlight = UIHelper::CreateStatic(uiXml, "knife_slot_highlight", this); //--#SM+#--
+    m_KnifeSlotHighlight->Show(false); //--#SM+#--
 
 	Fvector2 pos;
 	pos								= m_QuickSlotsHighlight[0]->GetWndPos();
@@ -136,11 +145,20 @@ void CUIActorMenu::Construct()
 	m_pInventoryDetectorList	= UIHelper::CreateDragDropListEx(uiXml, "dragdrop_detector", this);
 	m_pInventoryPistolList		= UIHelper::CreateDragDropListEx(uiXml, "dragdrop_pistol", this);
 	m_pInventoryAutomaticList	= UIHelper::CreateDragDropListEx(uiXml, "dragdrop_automatic", this);
+
+	m_ActorStateInfo					= xr_new<ui_actor_state_wnd>();
+	m_ActorStateInfo->init_from_xml		(uiXml, "actor_state_info");
+	m_ActorStateInfo->SetAutoDelete		(true);
+	AttachChild							(m_ActorStateInfo); 
+	
 	m_pTradeActorBagList		= UIHelper::CreateDragDropListEx(uiXml, "dragdrop_actor_trade_bag", this);
 	m_pTradeActorList			= UIHelper::CreateDragDropListEx(uiXml, "dragdrop_actor_trade", this);
 	m_pTradePartnerBagList		= UIHelper::CreateDragDropListEx(uiXml, "dragdrop_partner_bag", this);
 	m_pTradePartnerList			= UIHelper::CreateDragDropListEx(uiXml, "dragdrop_partner_trade", this);
-	m_pDeadBodyBagList			= UIHelper::CreateDragDropListEx(uiXml, "dragdrop_deadbody_bag", this);
+	m_pDeadBodyActorBagList		= UIHelper::CreateDragDropListEx(uiXml, "dragdrop_deadbody_actor_bag", this);
+	m_pDeadBodyBagList			= UIHelper::CreateDragDropListEx(uiXml, "dragdrop_deadbody_bag", this);	
+	m_pInventoryBinocularList = UIHelper::CreateDragDropListEx(uiXml, "dragdrop_binocular", this); //--#SM+#--
+	m_pInventoryKnifeList = UIHelper::CreateDragDropListEx(uiXml, "dragdrop_knife", this); //--#SM+#--
 	m_pQuickSlot				= UIHelper::CreateDragDropReferenceList(uiXml, "dragdrop_quick_slots", this);
 	m_pQuickSlot->Initialize	();
 
@@ -185,10 +203,6 @@ void CUIActorMenu::Construct()
 	m_pDeadBodyBagList->SetAutoDelete	(true);
 	xml_init.InitDragDropListEx			(uiXml, "dragdrop_deadbody_bag", 0, m_pDeadBodyBagList);
 */
-	m_ActorStateInfo					= xr_new<ui_actor_state_wnd>();
-	m_ActorStateInfo->init_from_xml		(uiXml, "actor_state_info");
-	m_ActorStateInfo->SetAutoDelete		(true);
-	AttachChild							(m_ActorStateInfo); 
 
 	XML_NODE* stored_root				= uiXml.GetLocalRoot	();
 	uiXml.SetLocalRoot					(uiXml.NavigateToNode	("action_sounds",0));
@@ -247,8 +261,12 @@ void CUIActorMenu::Construct()
 	BindDragDropListEvents				(m_pTradeActorList);
 	BindDragDropListEvents				(m_pTradePartnerBagList);
 	BindDragDropListEvents				(m_pTradePartnerList);
+	BindDragDropListEvents				(m_pDeadBodyActorBagList);
 	BindDragDropListEvents				(m_pDeadBodyBagList);
 	BindDragDropListEvents				(m_pQuickSlot);
+
+	BindDragDropListEvents(m_pInventoryBinocularList); //--#SM+#--
+	BindDragDropListEvents(m_pInventoryKnifeList); //--#SM+#--
 
 	m_allowed_drops[iTrashSlot].push_back(iActorBag);
 	m_allowed_drops[iTrashSlot].push_back(iActorSlot);

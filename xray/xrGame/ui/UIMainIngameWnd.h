@@ -35,14 +35,8 @@ protected:
 
 	CUIHudStatesWnd*	m_ui_hud_states;
 
-	CUIStatic*			m_ind_bleeding;
-	CUIStatic*			m_ind_radiation;
-	CUIStatic*			m_ind_starvation;
-	CUIStatic*			m_ind_weapon_broken;
-	CUIStatic*			m_ind_helmet_broken;
-	CUIStatic*			m_ind_outfit_broken;
-	CUIStatic*			m_ind_overweight;
-
+	CUIStatic*			m_ind_lr_health;
+	
 public:
 	CUIStatic*			m_ind_boost_psy;
 	CUIStatic*			m_ind_boost_radia;
@@ -70,52 +64,11 @@ public:
 	CUITextWnd*			m_QuickSlotText4;
 
 protected:
-
-	// 5 статиков дл€ отображени€ иконок:
-	// - сломанного оружи€(only mp)
-	// - радиации
-	// - ранени€
-	// - голода
-	// - усталости
-	CUIStatic*			UIWeaponJammedIcon;
-//	CUIStatic			UIRadiaitionIcon;
-//	CUIStatic			UIWoundIcon;
-//	CUIStatic			UIStarvationIcon;
-//	CUIStatic			UIPsyHealthIcon;
-	CUIStatic*			UIInvincibleIcon;
-//	CUIStatic			UISleepIcon;
-	CUIStatic*			UIArtefactIcon;
-
-	CUIScrollView*		m_UIIcons;
 	CUIWindow*			m_pMPChatWnd;
 	CUIWindow*			m_pMPLogWnd;
 
 public:
-	
-	// ≈нумы соответсвующие предупреждающим иконкам 
-	enum EWarningIcons
-	{
-		ewiAll				= 0,
-		ewiWeaponJammed,
-//		ewiRadiation,
-//		ewiWound,
-//		ewiStarvation,
-//		ewiPsyHealth,
-//		ewiSleep,
-		ewiInvincible,
-		ewiArtefact,
-	};
-
 	void				SetMPChatLog					(CUIWindow* pChat, CUIWindow* pLog);
-
-	// «адаем цвет соответствующей иконке
-	void				SetWarningIconColor				(EWarningIcons icon, const u32 cl);
-	void				TurnOffWarningIcon				(EWarningIcons icon);
-
-	// ѕороги изменени€ цвета индикаторов, загружаемые из system.ltx
-	typedef				xr_map<EWarningIcons, xr_vector<float> >	Thresholds;
-	typedef				Thresholds::iterator						Thresholds_it;
-	Thresholds			m_Thresholds;
 
 	// ≈нум перечислени€ возможных мигающих иконок
 	enum EFlashingIcons
@@ -135,7 +88,6 @@ public:
 
 protected:
 	void				UpdateQuickSlots				();
-	void				SetWarningIconColorUI			(CUIStatic* s, const u32 cl);
 	void				InitFlashingIcons				(CUIXml* node);
 	void				DestroyFlashingIcons			();
 	void				UpdateFlashingIcons				();

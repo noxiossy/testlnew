@@ -7,6 +7,10 @@
 // #include "../../../../xrEngine/CameraBase.h"
 //#include "../../../ActorCondition.h"
 #include "../../../HudManager.h"
+#include <luabind/functor.hpp>
+#include "script_engine.h"
+#include "ai_space.h"
+
 
 #define TEMPLATE_SPECIALIZATION template <\
 	typename _Object\
@@ -35,15 +39,13 @@ void CStateBloodsuckerVampireExecuteAbstract::initialize()
 
 	object->m_hits_before_vampire	= 0;
 	object->m_sufficient_hits_before_vampire_random	=	-1 + (rand()%3);
+	
+	luabind::functor<void> functor;
+	ai().script_engine().functor("xr_effects.disable_ui_anim",functor);
+	functor(1);
+	
+    Actor()->TransferInfo("bs_qte", true);
 
-	HUD().SetRenderable				(false);
-	NET_Packet			P;
-	Actor()->u_EventGen	(P, GEG_PLAYER_WEAPON_HIDE_STATE, Actor()->ID());
-	P.w_u16				(INV_STATE_BLOCK_ALL);
-	P.w_u8				(u8(true));
-	Actor()->u_EventSend(P);
-
-	Actor()->set_inventory_disabled	(true);
 
 	m_effector_activated			= false;
 }
@@ -55,6 +57,10 @@ void CStateBloodsuckerVampireExecuteAbstract::execute()
 		object->ActivateVampireEffector	();
 		m_effector_activated			= true;
 	}
+	
+	luabind::functor<void> functor;
+	ai().script_engine().functor("leer_scr.bloodsucker_qte_hud",functor);
+	functor(1);
 	
 	look_head							();
 
@@ -124,7 +130,6 @@ void CStateBloodsuckerVampireExecuteAbstract::show_hud()
 TEMPLATE_SPECIALIZATION
 void CStateBloodsuckerVampireExecuteAbstract::cleanup()
 {
-	Actor()->set_inventory_disabled	(false);
 	
 	if ( object->com_man().ta_is_active() )
 		object->com_man().ta_deactivate();
@@ -132,7 +137,19 @@ void CStateBloodsuckerVampireExecuteAbstract::cleanup()
 	if (object->CControlledActor::is_controlling())
 		object->CControlledActor::release		();
 
-	show_hud();
+    Actor()->OnDisableInfo("bs_qte");
+	
+	if (Actor()->HasInfo("bs_qte_die"))
+	{
+	Actor()->OnDisableInfo("bs_qte_die");
+	luabind::functor<void> functor;
+	ai().script_engine().functor("xr_effects.kill_actor",functor);
+	functor(1);
+	}
+	
+	luabind::functor<void> functor;
+	ai().script_engine().functor("leer_scr.bloodsucker_qte_hud_dis",functor);
+	functor(1);
 }
 
 TEMPLATE_SPECIALIZATION
@@ -226,9 +243,25 @@ void CStateBloodsuckerVampireExecuteAbstract::execute_vampire_continue()
 	object->sound().play(CAI_Bloodsucker::eVampireSucking);
 
 	// проверить на грави удар
-	if (time_vampire_started + VAMPIRE_TIME_HOLD < Device.dwTimeGlobal) {
+	if (!Actor()->HasInfo("bs_qte_done") && time_vampire_started + VAMPIRE_TIME_HOLD < Device.dwTimeGlobal) {
+		Actor()->TransferInfo("bs_qte_die", true);
 		m_action = eActionFire;
-	}
+	} 
+    if(Actor()->HasInfo("bs_qte_done") && time_vampire_started + VAMPIRE_TIME_HOLD < Device.dwTimeGlobal)
+     {
+		
+		cleanup();
+		
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.quick_kk",functor);
+		functor(1);
+
+		object->conditions().SetHealth(0.01f);
+		
+       		 m_action = eActionCompleted;
+		
+		Actor()->OnDisableInfo("bs_qte_done");
+    }
 }
 
 TEMPLATE_SPECIALIZATION
@@ -246,7 +279,7 @@ void CStateBloodsuckerVampireExecuteAbstract::look_head()
 {
 	IKinematics *pK = smart_cast<IKinematics*>(object->Visual());
 	Fmatrix bone_transform;
-	bone_transform = pK->LL_GetTransform(pK->LL_BoneID("bip01_head"));	
+	bone_transform = pK->LL_GetTransform(pK->LL_BoneID("bip01_neck"));	
 
 	Fmatrix global_transform;
 	global_transform.mul_43(object->XFORM(),bone_transform);

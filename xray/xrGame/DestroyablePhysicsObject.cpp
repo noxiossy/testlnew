@@ -50,6 +50,16 @@ void CDestroyablePhysicsObject::net_Destroy()
 
 BOOL CDestroyablePhysicsObject::net_Spawn(CSE_Abstract* DC)
 {
+	CSE_Abstract *E = (CSE_Abstract*)DC;
+	const CSE_Visual *visual = smart_cast<const CSE_Visual*>( E );
+	if ( visual ) {
+	  shared_str N = visual_name( E );
+	  if ( !( N.c_str() && N[ 0 ] ) ) {
+	    Msg( "! [%s]: prevent %s[%u] from spawn because it has no visual", __FUNCTION__, E->name_replace()[ 0 ] ? E->name_replace() : E->s_name.c_str(), E->ID );
+	    return FALSE;
+	  }
+	}
+
 	BOOL res=inherited::net_Spawn(DC);
 	IKinematics		*K=smart_cast<IKinematics*>(Visual());
 	CInifile* ini=K->LL_UserData();
@@ -99,7 +109,7 @@ void CDestroyablePhysicsObject::Destroy()
 {
 	VERIFY(!physics_world()->Processing());
 	const CGameObject *who_object = smart_cast<const CGameObject*>(FatalHit().initiator());
-	callback(GameObject::eDeath)(lua_game_object(),who_object  ? who_object : 0);
+	callback(GameObject::eDeath)(lua_game_object(),who_object ? who_object->lua_game_object() : 0);
 	CPHDestroyable::Destroy(ID(),"physic_destroyable_object");
 	if(m_destroy_sound._handle())
 	{

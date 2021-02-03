@@ -11,9 +11,11 @@
 #include "xrmessages.h"
 #include "physic_item.h"
 #include "Level.h"
+#include "Actor.h"
 #include "entity_alive.h"
 #include "EntityCondition.h"
 #include "InventoryOwner.h"
+#include "script_game_object.h"
 
 CEatableItem::CEatableItem()
 {
@@ -106,10 +108,13 @@ bool CEatableItem::UseBy (CEntityAlive* entity_alive)
 		Level().Send			(tmp_packet);
 	}
 	
-	if(m_iPortionsNum > 0)
-		--m_iPortionsNum;
-	else
-		m_iPortionsNum = 0;
+	if (this->cast_inventory_item()->m_remove_after_use)
+	{
+		if(m_iPortionsNum > 0)
+			--m_iPortionsNum;
+		else
+			m_iPortionsNum = 0;
+	}
 
 	return true;
 }

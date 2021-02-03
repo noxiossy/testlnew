@@ -147,7 +147,7 @@ void CPsyDog::Think()
 	}
 	else 
 	{
-		if (!EnemyMan.get_enemy() && !m_storage.empty()) {
+		if (!EnemyMan.get_enemy() && !m_storage.empty() || Actor()->HasInfo("brain_helmet_active")) {
 			delete_all_phantoms();
 		}
 	}
@@ -156,6 +156,7 @@ void CPsyDog::Think()
 
 void CPsyDog::net_Destroy()
 {
+	m_aura->on_death	();
 	delete_all_phantoms	();
 	inherited::net_Destroy();
 }

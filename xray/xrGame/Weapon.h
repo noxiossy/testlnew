@@ -24,6 +24,8 @@ class CUIWindow;
 class CBinocularsVision;
 class CNightVisionEffector;
 
+ENGINE_API extern float psHUD_FOV_def;
+
 class CWeapon : public CHudItemObject,
 				public CShootingObject
 {
@@ -57,6 +59,9 @@ public:
 	virtual void			renderable_Render	();
 	virtual void			render_hud_mode		();
 	virtual bool			need_renderable		();
+
+	bool					IsReload			()	const		{	return GetState() == eReload;}
+	bool					IsFire				()	const		{	return GetState() == eFire;}
 
 	virtual void			render_item_ui		();
 	virtual bool			render_item_ui_query();
@@ -105,6 +110,11 @@ public:
 		eMisfire,
 		eMagEmpty,
 		eSwitch,
+	// mmccxvii: FWR code
+	//*
+		eTorch,
+		eFireMode,
+	//*
 	};
 	enum EWeaponSubStates{
 		eSubstateReloadBegin		=0,
@@ -234,6 +244,16 @@ public:
 	IC float				GetZoomFactor		() const		{return m_zoom_params.m_fCurrentZoomFactor;}
 	IC void					SetZoomFactor		(float f) 		{m_zoom_params.m_fCurrentZoomFactor = f;}
 
+    float m_hud_fov_add_mod;
+
+    float m_nearwall_dist_max;
+    float m_nearwall_dist_min;
+    float m_nearwall_last_hud_fov;
+    float m_nearwall_target_hud_fov;
+    float m_nearwall_speed_mod;
+
+    float GetHudFov(); //--#SM+#--
+
 	virtual	float			CurrentZoomFactor	();
 	//показывает, что оружие находится в соостоянии поворота для приближенного прицеливания
 			bool			IsRotatingToZoom	() const		{	return (m_zoom_params.m_fZoomRotationFactor<1.f);}
@@ -276,6 +296,10 @@ protected:
 	virtual void			UpdateFireDependencies_internal	();
 	virtual void			UpdatePosition			(const Fmatrix& transform);	//.
 	virtual void			UpdateXForm				();
+
+	float m_fLR_MovingFactor; // !!!!
+	u8 GetCurrentHudOffsetIdx() const;
+	
 	virtual void			UpdateHudAdditonal		(Fmatrix&);
 	IC		void			UpdateFireDependencies	()			{ if (dwFP_Frame==Device.dwFrame) return; UpdateFireDependencies_internal(); };
 
@@ -502,4 +526,14 @@ public:
 	
 	virtual void				DumpActiveParams			(shared_str const & section_name, CInifile & dst_ini) const;
 	virtual shared_str const	GetAnticheatSectionName		() const { return cNameSect(); };
+
+// mmccxvii: FWR code
+//*
+protected:
+	shared_str ppeExplosion;
+	ref_sound sndExplosion;
+
+public:
+	virtual void Explosion();
+//*
 };

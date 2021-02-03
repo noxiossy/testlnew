@@ -30,10 +30,19 @@
 //#include "PHActivationShape.h"
 #include "CharacterPhysicsSupport.h"
 #include "car_memory.h"
+
+#include "HudManager.h"//LA
+#include "UIGameSP.h"//LA
+
 #include "../xrphysics/IPHWorld.h"
+#include "../xrPhysics/IActivationShape.h"
 BONE_P_MAP CCar::bone_map=BONE_P_MAP();
 
+#include "UIGameCustom.h"
+
 //extern CPHWorld*	ph_world;
+
+
 
 CCar::CCar()
 {
@@ -75,10 +84,10 @@ CCar::CCar()
 	inventory			= xr_new<CInventory>();
 	inventory->SetSlotsUseful(false);
 	m_doors_torque_factor = 2.f;
-	m_power_increment_factor=0.5f;
-	m_rpm_increment_factor=0.5f;
-	m_power_decrement_factor=0.5f;
-	m_rpm_decrement_factor=0.5f;
+	m_power_increment_factor=1.0f;
+	m_rpm_increment_factor=1.0f;
+	m_power_decrement_factor=1.0f;
+	m_rpm_decrement_factor=1.0f;
 	b_breaks=false;
 	m_break_start=0.f;
 	m_break_time=1.;
@@ -87,7 +96,7 @@ CCar::CCar()
 	b_exploded=false;
 	m_car_weapon=NULL;
 	m_power_neutral_factor=0.25f;
-	m_steer_angle=0.f;
+	m_steer_angle=2.f;                       // Diesel
 #ifdef DEBUG
 	InitDebug();
 #endif
@@ -123,7 +132,9 @@ void CCar::reload		(LPCSTR section)
 
 void CCar::cb_Steer			(CBoneInstance* B)
 {
+#ifdef DEBUG
 	VERIFY2(fsimilar(DET(B->mTransform),1.f,DET_CHECK_EPS),"Bones receive returns 0 matrix");
+#endif
 	CCar*	C			= static_cast<CCar*>(B->callback_param());
 	Fmatrix m;
 
@@ -213,6 +224,8 @@ void CCar::SpawnInitPhysics	(CSE_Abstract	*D)
 	//PPhysicsShell()->add_ObjectContactCallback(ActorObstacleCallback);
 	SetDefaultNetState				(so);
 	CPHUpdateObject::Activate       ();
+
+	m_pPhysicsShell->applyImpulse(Fvector().set(0,-1.f,0), 0.1);// hit on spawn
 }
 
 void	CCar::net_Destroy()
@@ -230,12 +243,6 @@ void	CCar::net_Destroy()
 	CScriptEntity::net_Destroy();
 	inherited::net_Destroy();
 	CExplosive::net_Destroy();
-	if(m_pPhysicsShell)
-	{
-		m_pPhysicsShell->Deactivate();
-		m_pPhysicsShell->ZeroCallbacks();
-		xr_delete(m_pPhysicsShell);
-	}
 	CHolderCustom::detach_Actor();
 	ClearExhausts();
 	m_wheels_map.clear();
@@ -251,6 +258,12 @@ void	CCar::net_Destroy()
 	m_damage_particles.Clear();
 	CPHDestroyable::RespawnInit();
 	CPHCollisionDamageReceiver::Clear();
+	if (m_pPhysicsShell)
+	{
+		m_pPhysicsShell->Deactivate();
+		m_pPhysicsShell->ZeroCallbacks();
+		xr_delete(m_pPhysicsShell);
+	}
 	b_breaks=false;
 }
 
@@ -327,12 +340,13 @@ void CCar::RestoreNetState(CSE_PHSkeleton* po)
 			i->second.RestoreNetState(*ii);
 		}
 	}
-/*
+
 	//as later may kill diable/enable state save it;
 	bool enable = PPhysicsShell()->isEnabled();
 /////////////////////////////////////////////////////////////////////////
 	Fmatrix restored_form;
-	PPhysicsShell()->GetGlobalTransformDynamic(&restored_form);
+	m_pPhysicsShell->GetGlobalTransformDynamic(&restored_form);
+	//PPhysicsShell()->GetGlobalTransformDynamic(&restored_form);
 /////////////////////////////////////////////////////////////////////
 	Fmatrix inv ,replace,sof;
 	sof.setXYZ(co->o_Angle.x,co->o_Angle.y,co->o_Angle.z);
@@ -341,33 +355,42 @@ void CCar::RestoreNetState(CSE_PHSkeleton* po)
 	inv.invert();
 	replace.mul(sof,inv);
 ////////////////////////////////////////////////////////////////////
-	{
+	//{
 		
 		PKinematics(Visual())->CalculateBones_Invalidate();
-		PKinematics(Visual())->CalculateBones();
-		PPhysicsShell()->DisableCollision();
-		CPHActivationShape activation_shape;//Fvector start_box;m_PhysicMovementControl.Box().getsize(start_box);
+		PKinematics(Visual())->CalculateBones(TRUE);
+		m_pPhysicsShell->DisableCollision();
+		//PPhysicsShell()->DisableCollision();
+		////CPHActivationShape activation_shape;//Fvector start_box;m_PhysicMovementControl.Box().getsize(start_box);
 
 		Fvector center;Center(center);
 		Fvector obj_size;BoundingBox().getsize(obj_size);
-		get_box(PPhysicsShell(),restored_form,obj_size,center);
+		get_box(m_pPhysicsShell, restored_form, obj_size, center);
+		//get_box(PPhysicsShell(),restored_form,obj_size,center);
 		replace.transform(center);
-		activation_shape.Create(center,obj_size,this);
-		activation_shape.set_rotation(sof);
-		activation_shape.Activate(obj_size,1,1.f,M_PI/8.f);
-		Fvector dd;
-		dd.sub(activation_shape.Position(),center);
-		activation_shape.Destroy();
+		//activation_shape.Create(center,obj_size,this);
+		//activation_shape.set_rotation(sof);
+		//activation_shape.Activate(obj_size,1,1.f,M_PI/8.f);
+		Fvector out_pos, dd;
+		ActivateShapePhysShellHolder(this, sof, obj_size, center, out_pos);
+		//dd.sub(activation_shape.Position(),center);
+		dd.sub(out_pos,center);
+		//activation_shape.Destroy();
 		sof.c.add(dd);
-		PPhysicsShell()->EnableCollision();
-	}
+		//PPhysicsShell()->EnableCollision();
+		m_pPhysicsShell->EnableCollision();	
+	//}
 ////////////////////////////////////////////////////////////////////
 	replace.mul(sof,inv);
-	PPhysicsShell()->TransformPosition(replace);
-	if(enable)PPhysicsShell()->Enable();
-	else PPhysicsShell()->Disable();
-	PPhysicsShell()->GetGlobalTransformDynamic(&XFORM());
-	*/
+	m_pPhysicsShell->TransformPosition(replace, mh_clear);
+	if (enable)m_pPhysicsShell->Enable();
+	else m_pPhysicsShell->Disable();
+	m_pPhysicsShell->GetGlobalTransformDynamic(&XFORM());
+	//PPhysicsShell()->TransformPosition(replace);
+	//if(enable)PPhysicsShell()->Enable();
+	//else PPhysicsShell()->Disable();
+	//PPhysicsShell()->GetGlobalTransformDynamic(&XFORM());
+	
 }
 void CCar::SetDefaultNetState(CSE_PHSkeleton* po)
 {
@@ -430,6 +453,14 @@ void CCar::UpdateCL				( )
 		m_car_weapon->UpdateCL();
 		if(m_memory)
 			m_memory->set_camera(m_car_weapon->ViewCameraPos(), m_car_weapon->ViewCameraDir(), m_car_weapon->ViewCameraNorm());
+	
+	if (OwnerActor() && HasWeapon() && m_car_weapon->IsActive())//(LA
+		{
+			collide::rq_result& rq = HUD().GetCurrentRayQuery();
+			CCameraBase* C	= active_camera;
+			m_car_weapon->SetParam(CCarWeapon::eWpnDesiredPos, C->vPosition.add(C->vDirection.mul(rq.range)));
+		}                                                        //LA)
+	
 	}
 	ASCUpdate			();
 	if(Owner()) return;
@@ -612,6 +643,7 @@ void CCar::detach_Actor()
 	Unclutch();
 	ResetKeys();
 	m_current_rpm=m_min_rpm;
+	if (HasWeapon()) m_car_weapon->Action(CCarWeapon::eWpnFire, 0);//LA)
 //	CurrentGameUI()->UIMainIngameWnd->CarPanel().Show(false);
 	///Break();
 	//H_SetParent(NULL);
@@ -715,6 +747,28 @@ bool CCar::Exit(const Fvector& pos,const Fvector& dir)
 	}
 	return false;
 
+}
+
+void CCar::DoEnter()
+{
+	Fvector center;
+	Center(center);
+
+	Fvector enter_pos;
+	enter_pos.add(Device.vCameraPosition,center);
+	enter_pos.mul(0.5f);
+}
+
+void CCar::DoExit()
+{
+	CActor* A = OwnerActor();
+	if (A)
+	{
+		if (!m_doors.empty())m_doors.begin()->second.GetExitPosition(m_exit_position);
+		else m_exit_position.set(Position());
+		A->detach_Vehicle();
+		if (A->g_Alive() <= 0.f)A->character_physics_support()->movement()->DestroyCharacter();
+	}
 }
 
 void CCar::ParseDefinitions()
@@ -847,6 +901,11 @@ void CCar::CreateSkeleton(CSE_Abstract	*po)
 	m_pPhysicsShell->SetAirResistance(0.f,0.f);
 	m_pPhysicsShell->SetPrefereExactIntegration();
 
+	m_pPhysicsShell->Enable();
+
+    //m_pPhysicsShell = P_build_Shell(this, false, &bone_map);
+    //-Alundaio replase below with P_build_Shell ???
+	
 	ApplySpawnIniToPhysicShell(&po->spawn_ini(),m_pPhysicsShell,false);
 	ApplySpawnIniToPhysicShell(pK->LL_UserData(),m_pPhysicsShell,false);
 }
@@ -874,7 +933,7 @@ void CCar::Init()
 		VERIFY2(fsimilar(DET(pKinematics->LL_GetTransform(m_bone_steer)),1.f,EPS_L),"BBADD MTX");
 		pKinematics->LL_GetBoneInstance(m_bone_steer).set_callback(bctPhysics,cb_Steer,this);
 	}
-	m_steer_angle=0.f;
+	m_steer_angle=2.f;                  //Diesel
 	//ref_wheel.Init();
 	m_ref_radius=ini->r_float("car_definition","reference_radius");//ref_wheel.radius;
 	b_exploded						=false;
@@ -1085,7 +1144,7 @@ void CCar::UpdatePower()
 {
 	m_current_rpm=EngineDriveSpeed();
 	m_current_engine_power=EnginePower();
-	if(b_auto_switch_transmission&&!b_transmission_switching) 
+	if(b_auto_switch_transmission&&!b_transmission_switching&&b_engine_on) 
 	{
 		VERIFY2(CurrentTransmission()<m_gear_ratious.size(),"wrong transmission");
 		if(m_current_rpm<m_gear_ratious[CurrentTransmission()][1]) TransmissionDown();
@@ -1369,7 +1428,7 @@ void CCar::PhTune(float step)
 float CCar::EffectiveGravity()
 {
 	float g= physics_world()->Gravity();
-	if(CPHUpdateObject::IsActive())g*=0.5f;
+	if(CPHUpdateObject::IsActive())g*=1.0f; /////////////////Diesel was 0.5
 	return g;
 }
 float CCar::AntiGravityAccel()
@@ -1784,6 +1843,10 @@ void CCar::OnBeforeExplosion()
 	setEnabled(FALSE);
 }
 
+#include <luabind/functor.hpp>
+#include "script_engine.h"
+#include "ai_space.h"
+
 void CCar::CarExplode()
 {
 
@@ -1801,6 +1864,10 @@ void CCar::CarExplode()
 		else m_exit_position.set(Position());
 		A->detach_Vehicle();
 		if(A->g_Alive()<=0.f)A->character_physics_support()->movement()->DestroyCharacter();
+
+		luabind::functor<void> functor;
+		ai().script_engine().functor("rietmon_callbacks.off_music",functor);
+		functor(1);
 	}
 
 	if(CPHDestroyable::CanDestroy())

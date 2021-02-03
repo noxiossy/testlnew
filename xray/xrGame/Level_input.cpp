@@ -14,7 +14,8 @@
 #include "Inventory.h"
 #include "xrServer.h"
 #include "autosave_manager.h"
-
+#include "ui/UIStatic.h"
+#include "string_table.h"
 #include "actor.h"
 #include "huditem.h"
 #include "UIGameCustom.h"
@@ -43,7 +44,7 @@ extern	float	g_fTimeFactor;
 
 void CLevel::IR_OnMouseWheel( int direction )
 {
-	if(	g_bDisableAllInput	) return;
+	if(	g_bDisableAllInput || Actor()->HasInfo("block_keys") || Actor()->HasInfo("anim_input") || Actor()->HasInfo("kek") ) return;
 
 	if (CurrentGameUI()->IR_UIOnMouseWheel(direction)) return;
 	if( Device.Paused()
@@ -127,16 +128,259 @@ void CLevel::IR_OnKeyboardPress	(int key)
 		return;
 	}
 
-	if(	g_bDisableAllInput )	return;
+	if (_curr==kUSE && Actor()->HasInfo("lom"))
+	{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("xr_effects.lom_func",functor);
+		functor(1);
+	}
+
+	if (_curr==kUSE && Actor()->HasInfo("mono_sin_qte"))
+	{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("xr_effects.mono_sin_qte_func",functor);
+		functor(1);
+	}
+
+    if (_curr==kUSE && Actor()->HasInfo("bs_qte"))
+	{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.bloodsucker_qte",functor);
+		functor(1);
+	}
+
+	if (_curr==kACCEL && Actor()->HasInfo("lvl_3_marauder"))
+	{
+		Actor()->TransferInfo("allow_out_mar", true);
+	}
+
+	if (_curr==kACCEL && Actor()->HasInfo("lvl_3_feel"))
+	{
+		Actor()->TransferInfo("allow_feel", true);
+	}
+
+	if (_curr==kSCREENSHOT)
+	{
+		Render->Screenshot();
+		return;
+	}
+
+	switch (key) {
+	case DIK_F1 : {
+		if (Actor()->HasInfo("guitar_input"))
+		{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.guitar_1",functor);
+		functor(1);
+		}
+		break;
+	}
+	case DIK_F2 : {
+		if (Actor()->HasInfo("guitar_input"))
+		{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.guitar_2",functor);
+		functor(1);
+		}
+		break;
+	}
+	case DIK_F3 : {
+		if (Actor()->HasInfo("guitar_input"))
+		{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.guitar_3",functor);
+		functor(1);
+		}
+		break;
+	}
+	case DIK_F4 : {
+		if (Actor()->HasInfo("guitar_input"))
+		{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.guitar_4",functor);
+		functor(1);
+		}
+		break;
+	}
+	case DIK_F5 : {
+		if (Actor()->HasInfo("guitar_input"))
+		{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.guitar_5",functor);
+		functor(1);
+		}
+		break;
+	}
+	case DIK_1 : {
+		if (Actor()->HasInfo("guitar_input"))
+		{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.guitar_6",functor);
+		functor(1);
+		}
+		break;
+	}
+	case DIK_2 : {
+		if (Actor()->HasInfo("guitar_input"))
+		{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.guitar_7",functor);
+		functor(1);
+		}
+		break;
+	}
+	case DIK_3 : {
+		if (Actor()->HasInfo("guitar_input"))
+		{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.guitar_8",functor);
+		functor(1);
+		}
+		break;
+	}
+	case DIK_4 : {
+		if (Actor()->HasInfo("guitar_input"))
+		{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.guitar_9",functor);
+		functor(1);
+		}
+		break;
+	}
+	case DIK_5 : {
+		if (Actor()->HasInfo("guitar_input"))
+		{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.guitar_10",functor);
+		functor(1);
+		}
+		break;
+	}
+	case DIK_Q : {
+		if (Actor()->HasInfo("guitar_input"))
+		{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.guitar_11",functor);
+		functor(1);
+		}
+		break;
+	}
+	case DIK_W : {
+		if (Actor()->HasInfo("guitar_input"))
+		{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.guitar_12",functor);
+		functor(1);
+		}
+		break;
+	}
+	case DIK_E : {
+		if (Actor()->HasInfo("guitar_input"))
+		{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.guitar_13",functor);
+		functor(1);
+		}
+		break;
+	}
+	case DIK_R : {
+		if (Actor()->HasInfo("guitar_input"))
+		{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.guitar_14",functor);
+		functor(1);
+		}
+		break;
+	}
+	case DIK_T : {
+		if (Actor()->HasInfo("guitar_input"))
+		{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.guitar_15",functor);
+		functor(1);
+		}
+		break;
+	}
+	case DIK_A : {
+		if (Actor()->HasInfo("guitar_input"))
+		{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.guitar_16",functor);
+		functor(1);
+		}
+		break;
+	}
+	case DIK_S : {
+		if (Actor()->HasInfo("guitar_input"))
+		{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.guitar_17",functor);
+		functor(1);
+		}
+		break;
+	}
+	case DIK_D : {
+		if (Actor()->HasInfo("guitar_input"))
+		{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.guitar_18",functor);
+		functor(1);
+		}
+		break;
+	}
+	case DIK_F : {
+		if (Actor()->HasInfo("guitar_input"))
+		{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.guitar_19",functor);
+		functor(1);
+		}
+		break;
+	}
+	case DIK_G : {
+		if (Actor()->HasInfo("guitar_input"))
+		{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.guitar_20",functor);
+		functor(1);
+		}
+		break;
+	}
+	case DIK_SPACE : {
+		if (Actor()->HasInfo("guitar_input"))
+		{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.guitar_off",functor);
+		functor(1);
+		}
+		break;
+   	}
+	case DIK_I : {
+		if (Actor()->HasInfo("guitar_input"))
+		{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.guitar_mode",functor);
+		functor(1);
+		}
+		break;
+		}
+	}
+	if(	g_bDisableAllInput || Actor()->HasInfo("block_keys") )	return;
+
+	Actor()->CallbackInput(key, 1);
 
 	switch ( _curr ) 
 	{
-	case kSCREENSHOT:
-		Render->Screenshot();
-		return;
-		break;
 
 	case kCONSOLE:
+		if(!Actor()->HasInfo("allow_console"))
+		{
+			SDrawStaticStruct* _s		= CurrentGameUI()->AddCustomStatic("game_saved", true);
+			LPSTR						save_name;
+			STRCONCAT					(save_name, CStringTable().translate("st_block_console"));
+			_s->wnd()->TextItemControl()->SetText(save_name);
+			return;
+		}
 		Console->Show				();
 		return;
 		break;
@@ -450,7 +694,25 @@ void CLevel::IR_OnKeyboardPress	(int key)
 
 void CLevel::IR_OnKeyboardRelease(int key)
 {
-	if (!bReady || g_bDisableAllInput	)								return;
+	EGameActions _curr = get_binded_action(key);
+	if (_curr==kACCEL && Actor()->HasInfo("lvl_3_marauder"))
+	{
+		Actor()->OnDisableInfo("allow_out_mar");
+	}
+	if (_curr==kACCEL && Actor()->HasInfo("lvl_3_feel"))
+	{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.tloudec",functor);
+		functor(1);	
+		Actor()->OnDisableInfo("allow_feel");
+	}
+	if (_curr==kCROUCH && Actor()->HasInfo("tlou"))
+	{
+		luabind::functor<void> functor;
+		ai().script_engine().functor("leer_scr.tloudec",functor);
+		functor(1);	
+	}
+	if (!bReady || g_bDisableAllInput || Actor()->HasInfo("block_keys") )	return;
 	if ( CurrentGameUI() && CurrentGameUI()->IR_UIOnKeyboardRelease(key)) return;
 	if (game && game->OnKeyboardRelease(get_binded_action(key)) )		return;
 	if (Device.Paused() 
@@ -459,6 +721,7 @@ void CLevel::IR_OnKeyboardRelease(int key)
 #endif //DEBUG
 		)				return;
 
+	Actor()->CallbackInput(key, 3);
 	if (CURRENT_ENTITY())		
 	{
 		IInputReceiver*		IR	= smart_cast<IInputReceiver*>	(smart_cast<CGameObject*>(CURRENT_ENTITY()));
@@ -468,7 +731,7 @@ void CLevel::IR_OnKeyboardRelease(int key)
 
 void CLevel::IR_OnKeyboardHold(int key)
 {
-	if(g_bDisableAllInput) return;
+	if(g_bDisableAllInput || Actor()->HasInfo("block_keys")) return;
 
 #ifdef DEBUG
 	// Lain: added
@@ -505,6 +768,8 @@ void CLevel::IR_OnKeyboardHold(int key)
 		&& !psActorFlags.test(AF_NO_CLIP)
 #endif //DEBUG
 		) return;
+
+	Actor()->CallbackInput(key, 2);
 	if (CURRENT_ENTITY())		{
 		IInputReceiver*		IR	= smart_cast<IInputReceiver*>	(smart_cast<CGameObject*>(CURRENT_ENTITY()));
 		if (IR)				IR->IR_OnKeyboardHold				(get_binded_action(key));

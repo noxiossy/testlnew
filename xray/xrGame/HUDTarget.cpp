@@ -23,7 +23,7 @@
 #include <ai/monsters/poltergeist/poltergeist.h>
 
 
-u32 C_ON_ENEMY		D3DCOLOR_RGBA(0xff,0,0,0x80);
+u32 C_ON_ENEMY		D3DCOLOR_RGBA(0xff,0xff,0xff,0x80);
 u32 C_ON_NEUTRAL	D3DCOLOR_RGBA(0xff,0xff,0x80,0x80);
 u32 C_ON_FRIEND		D3DCOLOR_RGBA(0,0xff,0,0x80);
 
@@ -53,7 +53,6 @@ CHUDTarget::CHUDTarget	()
 {    
 	fuzzyShowInfo		= 0.f;
 	PP.RQ.range			= 0.f;
-	hShader->create		("hud\\cursor","ui\\cursor");
 
 	PP.RQ.set				(NULL, 0.f, -1);
 
@@ -136,6 +135,17 @@ extern ENGINE_API BOOL g_bRendering;
 void CHUDTarget::Render()
 {
 
+	BOOL  lr_cursor = ( psHUD_Flags.is(HUD_LR_CROSSHAIR) );
+	
+	if(lr_cursor)
+	{
+		hShader->create		("hud\\cursor","ui\\cursor_lr");
+	}
+	else
+	{
+		hShader->create		("hud\\cursor","ui\\cursor");
+	}
+
 	BOOL  b_do_rendering = ( psHUD_Flags.is(HUD_CROSSHAIR|HUD_CROSSHAIR_RT|HUD_CROSSHAIR_RT2) );
 	
 	if(!b_do_rendering)
@@ -197,17 +207,25 @@ void CHUDTarget::Render()
 						case ALife::eRelationTypeEnemy:
 							C = C_ON_ENEMY; break;
 						case ALife::eRelationTypeNeutral:
-							C = C_ON_NEUTRAL; break;
+							C = C_ON_NEUTRAL;
+							if (fuzzyShowInfo>0.5f)
+							{
+								CStringTable	strtbl		;
+								F->SetColor	(subst_alpha(C,u8(iFloor(255.f*(fuzzyShowInfo-0.5f)*2.f))));
+								F->OutNext	("%s", *strtbl.translate(others_inv_owner->Name()) );
+								//F->OutNext	("%s", *strtbl.translate(others_inv_owner->CharacterInfo().Community().id()) );
+							}
+							break;
 						case ALife::eRelationTypeFriend:
-							C = C_ON_FRIEND; break;
-						}
-
-						if (fuzzyShowInfo>0.5f)
-						{
-							CStringTable	strtbl		;
-							F->SetColor	(subst_alpha(C,u8(iFloor(255.f*(fuzzyShowInfo-0.5f)*2.f))));
-							F->OutNext	("%s", *strtbl.translate(others_inv_owner->Name()) );
-							F->OutNext	("%s", *strtbl.translate(others_inv_owner->CharacterInfo().Community().id()) );
+							C = C_ON_FRIEND; 
+							if (fuzzyShowInfo>0.5f)
+							{
+								CStringTable	strtbl		;
+								F->SetColor	(subst_alpha(C,u8(iFloor(255.f*(fuzzyShowInfo-0.5f)*2.f))));
+								F->OutNext	("%s", *strtbl.translate(others_inv_owner->Name()) );
+								//F->OutNext	("%s", *strtbl.translate(others_inv_owner->CharacterInfo().Community().id()) );
+							}
+							break;
 						}
 					}
 
@@ -276,11 +294,6 @@ void CHUDTarget::Render()
 		F->OutNext		("%4.1f", PP.RQ.range);
 #endif
 	}
-
-	//отрендерить кружочек или крестик
-	if(!m_bShowCrosshair)
-	{
-		
 		UIRender->StartPrimitive	(6, IUIRender::ptTriList, UI().m_currentPointType);
 		
 		Fvector2		scr_size;
@@ -310,12 +323,6 @@ void CHUDTarget::Render()
 		// unlock VB and Render it as triangle LIST
 		UIRender->SetShader(*hShader);
 		UIRender->FlushPrimitive();
-
-	}else{
-		//отрендерить прицел
-		HUDCrosshair.cross_color	= C;
-		HUDCrosshair.OnRender		();
-	}
 }
 
 void CHUDTarget::net_Relcase(CObject* O)

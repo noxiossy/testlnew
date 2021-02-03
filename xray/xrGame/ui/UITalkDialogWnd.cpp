@@ -14,6 +14,7 @@
 #include "../actor.h"
 #include "../alife_registry_wrappers.h"
 #include "dinput.h"
+#include "UIHelper.h"
 
 #define				TALK_XML				"talk.xml"
 
@@ -36,27 +37,24 @@ void CUITalkDialogWnd::InitTalkDialogWnd()
 
 	CUIXmlInit::InitWindow		(*m_uiXml, "main", 0, this);
 
-//	CUIXmlInit::InitStatic		(*m_uiXml, "right_character_icon", 0, &UIOurIcon);
+	CUIXmlInit::InitStatic		(*m_uiXml, "right_character_icon", 0, &UIOurIcon);
 
-//	CUIXmlInit::InitStatic		(*m_uiXml, "left_character_icon", 0, &UIOthersIcon);
+	CUIXmlInit::InitStatic		(*m_uiXml, "left_character_icon", 0, &UIOthersIcon);
 
-//	UIOurIcon.AttachChild		(&UICharacterInfoLeft);
-//	UICharacterInfoLeft.InitCharacterInfo(Fvector2().set(0,0), UIOurIcon.GetWndSize(), "talk_character.xml");
+	UIOurIcon.AttachChild		(&UICharacterInfoLeft);
+	UICharacterInfoLeft.InitCharacterInfo(Fvector2().set(0,0), UIOurIcon.GetWndSize(), "talk_character.xml");
 
-//	UIOthersIcon.AttachChild	(&UICharacterInfoRight);
-//	UICharacterInfoRight.InitCharacterInfo(Fvector2().set(0,0), UIOthersIcon.GetWndSize(), "talk_character.xml");
+	UIOthersIcon.AttachChild	(&UICharacterInfoRight);
+	UICharacterInfoRight.InitCharacterInfo(Fvector2().set(0,0), UIOthersIcon.GetWndSize(), "talk_character.xml");
 
-//	AttachChild					(&UIOurIcon);
-//	AttachChild					(&UIOthersIcon);
+	AttachChild					(&UIOurIcon);
+	AttachChild					(&UIOthersIcon);
 
-	// Фрейм с нащими фразами
-//	AttachChild					(&UIDialogFrameBottom);
-//	CUIXmlInit::InitStatic		(*m_uiXml, "frame_bottom", 0, &UIDialogFrameBottom);
+	// Фрейм с нашими фразами
+	UIDialogFrameBottom			= UIHelper::CreateStatic	( *m_uiXml, "frame_bottom", this );
 
 	//основной фрейм диалога
-//	AttachChild					(&UIDialogFrameTop);
-//	CUIXmlInit::InitStatic		(*m_uiXml, "frame_top", 0, &UIDialogFrameTop);
-
+	UIDialogFrameTop			= UIHelper::CreateStatic	( *m_uiXml, "frame_top", this );
 
 	//Ответы
 	UIAnswersList				= xr_new<CUIScrollView>();
@@ -241,11 +239,11 @@ void CUITalkDialogWnd::AddIconedAnswer(LPCSTR caption, LPCSTR text, LPCSTR textu
 
 void CUITalkDialogWnd::SetOsoznanieMode(bool b)
 {
-//	UIOurIcon.Show		(!b);
-//	UIOthersIcon.Show	(!b);
+	UIOurIcon.Show		(!b);
+	UIOthersIcon.Show	(!b);
 
 	UIAnswersList->Show	(!b);
-//	UIDialogFrameTop.Show (!b);
+	UIDialogFrameTop->Show (!b);
 
 	UIToTradeButton.Show(!b);
 	if ( mechanic_mode )

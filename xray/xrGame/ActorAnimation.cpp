@@ -25,9 +25,11 @@ static const float y_spin0_factor		= 0.0f;
 static const float y_spin1_factor		= 0.4f;
 static const float y_shoulder_factor	= 0.4f;
 static const float y_head_factor		= 0.2f;
-static const float p_spin0_factor		= 0.0f;
-static const float p_spin1_factor		= 0.2f;
-static const float p_shoulder_factor	= 0.7f;
+
+static const float p_spin0_factor		= 0.7f;
+static const float p_spin1_factor		= 0.01f;
+static const float p_shoulder_factor	= 0.3f;
+
 static const float p_head_factor		= 0.1f;
 static const float r_spin0_factor		= 0.3f;
 static const float r_spin1_factor		= 0.3f;
@@ -198,7 +200,7 @@ void SActorState::Create(IKinematicsAnimated* K, LPCSTR base)
 	m_torso[11].Create(K,base,"_12");
 	m_torso[12].Create(K,base,"_13");
 	
-	m_torso_idle	= K->ID_Cycle(strconcat(sizeof(buf),buf,base,"_torso_0_aim_0"));
+	m_torso_idle	= K->ID_Cycle(strconcat(sizeof(buf),buf,base,"_torso_5_aim_0"));
 	m_head_idle		= K->ID_Cycle("head_idle_0");
 	jump_begin		= K->ID_Cycle(strconcat(sizeof(buf),buf,base,"_jump_begin"));
 	jump_idle		= K->ID_Cycle(strconcat(sizeof(buf),buf,base,"_jump_idle"));
@@ -266,14 +268,17 @@ void SVehicleAnimCollection::Create(IKinematicsAnimated* V,u16 num)
 void CActor::steer_Vehicle(float angle)	
 {
 	if(!m_holder)		return;
-/*
+
 	CCar*	car			= smart_cast<CCar*>(m_holder);
+	if (!car)
+		return;
+	
 	u16 anim_type       = car->DriverAnimationType();
 	SVehicleAnimCollection& anims=m_vehicle_anims->m_vehicles_type_collections[anim_type];
 	if(angle==0.f) 		smart_cast<IKinematicsAnimated*>	(Visual())->PlayCycle(anims.idles[0]);
 	else if(angle>0.f)	smart_cast<IKinematicsAnimated*>	(Visual())->PlayCycle(anims.steer_right);
 	else				smart_cast<IKinematicsAnimated*>	(Visual())->PlayCycle(anims.steer_left);
-*/
+
 }
 
 void legs_play_callback		(CBlend *blend)
@@ -441,19 +446,8 @@ void CActor::g_SetAnimation( u32 mstate_rl )
 							{
 							case CWeapon::eIdle:		M_torso	= TW->moving[moving_idx];		break;
 							
-							case CWeapon::eFire:	
-								if(is_standing)
-														M_torso = M_legs = M_head = TW->all_attack_0;
-								else
-														M_torso	= TW->attack_zoom;
-								break;
-
-							case CWeapon::eFire2:
-								if(is_standing)
-														M_torso = M_legs = M_head = TW->all_attack_1;
-								else
-														M_torso	= TW->fire_idle;
-								break;
+							case CWeapon::eFire:		M_torso = TW->attack_zoom;				break;
+							case CWeapon::eFire2:		M_torso = TW->fire_idle;				break;
 
 							case CWeapon::eReload:		M_torso	= TW->reload;					break;
 							case CWeapon::eShowing:		M_torso	= TW->draw;						break;
@@ -491,33 +485,16 @@ void CActor::g_SetAnimation( u32 mstate_rl )
 					}
 					else if (M) 
 					{
-						if(is_standing)
+						switch (M->GetState())
 						{
-							switch (M->GetState())
-							{
-							case CMissile::eShowing		:		M_torso	= TW->draw;			break;
-							case CMissile::eHiding		:		M_torso	= TW->holster;		break;
-							case CMissile::eIdle		:		M_torso	= TW->moving[moving_idx];		break;
-							case CMissile::eThrowStart	:		M_torso = M_legs = M_head = TW->all_attack_0;	break;
-							case CMissile::eReady		:		M_torso = M_legs = M_head = TW->all_attack_1;	break;
-							case CMissile::eThrow		:		M_torso = M_legs = M_head = TW->all_attack_2;	break;
-							case CMissile::eThrowEnd	:		M_torso = M_legs = M_head = TW->all_attack_2;	break;
-							default						:		M_torso	= TW->draw;			break; 
-							}
-						}
-						else
-						{
-							switch (M->GetState())
-							{
-							case CMissile::eShowing		:		M_torso	= TW->draw;						break;
-							case CMissile::eHiding		:		M_torso	= TW->holster;					break;
-							case CMissile::eIdle		:		M_torso	= TW->moving[moving_idx];		break;
-							case CMissile::eThrowStart	:		M_torso	= TW->attack_zoom;				break;
-							case CMissile::eReady		:		M_torso	= TW->fire_idle;				break;
-							case CMissile::eThrow		:		M_torso	= TW->fire_end;					break;
-							case CMissile::eThrowEnd	:		M_torso	= TW->fire_end;					break;
-							default						:		M_torso	= TW->draw;						break; 
-							}
+						case CMissile::eShowing		:		M_torso	= TW->draw;						break;
+						case CMissile::eHiding		:		M_torso	= TW->holster;					break;
+						case CMissile::eIdle		:		M_torso	= TW->moving[moving_idx];		break;
+						case CMissile::eThrowStart	:		M_torso	= TW->attack_zoom;				break;
+						case CMissile::eReady		:		M_torso	= TW->fire_idle;				break;
+						case CMissile::eThrow		:		M_torso	= TW->fire_end;					break;
+						case CMissile::eThrowEnd	:		M_torso	= TW->fire_end;					break;
+						default						:		M_torso	= TW->draw;						break; 
 						}
 					}
 					else if (A)
@@ -537,6 +514,9 @@ void CActor::g_SetAnimation( u32 mstate_rl )
 		}
 	}
 	MotionID		mid = smart_cast<IKinematicsAnimated*>(Visual())->ID_Cycle("norm_idle_0");
+
+	if (!inventory().ActiveItem())
+			M_torso = ST->m_torso[6].moving[moving_idx];
 
 	if (!M_legs)
 	{

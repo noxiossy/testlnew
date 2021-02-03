@@ -21,10 +21,12 @@
 #include "static_cast_checked.hpp"
 #include "player_hud.h"
 
+#include "CustomDetector.h"
+
 using namespace InventoryUtilities;
 
 // what to block
-u16	INV_STATE_LADDER		= (1<<INV_SLOT_3 | 1<<BINOCULAR_SLOT);
+u16	INV_STATE_LADDER		= INV_STATE_BLOCK_ALL;
 u16	INV_STATE_CAR			= INV_STATE_LADDER;
 u16	INV_STATE_BLOCK_ALL		= 0xffff;
 u16	INV_STATE_INV_WND		= INV_STATE_BLOCK_ALL;
@@ -635,6 +637,7 @@ bool CInventory::Action(u16 cmd, u32 flags)
 			}break;
 			case kWPN_ZOOM : 
 			{
+				if (Actor()->HasInfo("anim_input")) return false;
 				pActor->SetZoomRndSeed();
 			}break;
 		};
@@ -668,6 +671,8 @@ bool CInventory::Action(u16 cmd, u32 flags)
 		case kWPN_FIREMODE_PREV:
 		case kWPN_ZOOM	 : 
 		case kTORCH:
+		case kLRKICK:
+		case kLRGREN:
 		case kNIGHT_VISION:
 			{
 				SendActionEvent(cmd, flags);
@@ -689,6 +694,7 @@ bool CInventory::Action(u16 cmd, u32 flags)
 	case kWPN_5:
 	case kWPN_6:
 		{
+			if (Actor()->HasInfo("anim_input") || Actor()->HasInfo("kek")) return false ;
 			b_send_event = true;
 			if (cmd == kWPN_6 && !IsGameTypeSingle()) return false;
 			

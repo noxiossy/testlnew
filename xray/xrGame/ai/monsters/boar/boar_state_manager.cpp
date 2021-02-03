@@ -45,7 +45,11 @@ void CStateManagerBoar::execute()
 		if (enemy) {
 			switch (object->EnemyMan.get_danger_type()) {
 				case eStrong:	state_id = eStatePanic; break;
-				case eWeak:		state_id = eStateAttack; break;
+				case eWeak: if(Actor()->HasInfo("special_art"))
+				{
+					state_id = eStatePanic; break;
+				}
+					state_id = eStateAttack;break;	
 			}
 		} else if (object->HitMemory.is_hit()) {
 			state_id = eStateHitted;
