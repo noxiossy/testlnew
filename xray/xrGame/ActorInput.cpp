@@ -107,7 +107,7 @@ void CActor::IR_OnKeyboardPress(int cmd)
 	{
 		case kNIGHT_VISION:
 		{
-							  luabindex::functor<void> functor;
+							  luabind::functor<void> functor;
 							  ai().script_engine().functor("leer_scr.brain_use",functor);
 							  functor(1);
 							  SwitchNightVision();
@@ -532,7 +532,7 @@ void CActor::ActorUse()
 					TryToTalk();
 				}else
 				{
-					//только если находимся в режиме single
+					//ГІГ®Г«ГјГЄГ® ГҐГ±Г«ГЁ Г­Г ГµГ®Г¤ГЁГ¬Г±Гї Гў Г°ГҐГ¦ГЁГ¬ГҐ single
 					CUIGameSP* pGameSP = smart_cast<CUIGameSP*>(CurrentGameUI());
 					if ( pGameSP )
 					{
