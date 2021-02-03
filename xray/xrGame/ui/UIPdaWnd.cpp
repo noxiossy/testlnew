@@ -29,7 +29,7 @@
 
 #include "UIScriptWnd.h"
 #include "../../xrServerEntities/script_engine.h"
-#include <luabind/functor.hpp>
+//#include <luabind/functor.hpp>
 
 #define PDA_XML		"pda.xml"
 
@@ -206,10 +206,10 @@ void CUIPdaWnd::SetActiveSubdialog(const shared_str& section)
 		m_pActiveDialog = pUILogsWnd;
 	}
 	
-	luabind::functor<CUIDialogWndEx*> functor;
-	if (ai().script_engine().functor("pda.set_active_subdialog", functor))
+	luabind::functor<CUIDialogWndEx*> funct;
+	if (ai().script_engine().functor("pda.set_active_subdialog", funct))
 	{
-		CUIDialogWndEx* ret = functor((LPCSTR)section.c_str());
+		CUIDialogWndEx* ret = funct((LPCSTR)section.c_str());
 		CUIWindow* pScriptWnd = ret ? smart_cast<CUIWindow*>(ret) : (0);
 		if (pScriptWnd)
 			m_pActiveDialog = pScriptWnd;
