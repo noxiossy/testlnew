@@ -8,7 +8,7 @@
 //#include "../../../ActorCondition.h"
 #include "../../../HudManager.h"
 #include "ai/monsters/controlled_actor.h"
-#include <luabindex/functor.hpp>
+#include <luabind/functor.hpp>
 #include "script_engine.h"
 #include "ai_space.h"
 
@@ -37,7 +37,7 @@ void CStateZombieVampireExecuteAbstract::initialize()
     this->object->m_hits_before_vampire = 0;
     this->object->m_sufficient_hits_before_vampire_random = -1 + (rand() % 3);
 
-	luabindex::functor<void> functor;
+	luabind::functor<void> functor;
 	ai().script_engine().functor("xr_effects.disable_ui_anim",functor);
 	functor(1);
 	
@@ -56,7 +56,7 @@ void CStateZombieVampireExecuteAbstract::execute()
         m_effector_activated = true;
     }
 	
-	luabindex::functor<void> functor;
+	luabind::functor<void> functor;
 	ai().script_engine().functor("leer_scr.bloodsucker_qte_hud",functor);
 	functor(1);
 
@@ -142,12 +142,12 @@ void CStateZombieVampireExecuteAbstract::cleanup()
 	if (Actor()->HasInfo("bs_qte_die"))
 	{
 	Actor()->OnDisableInfo("bs_qte_die");
-	luabindex::functor<void> functor;
+	luabind::functor<void> functor;
 	ai().script_engine().functor("xr_effects.kill_actor",functor);
 	functor(1);
 	}
 	
-	luabindex::functor<void> functor;
+	luabind::functor<void> functor;
 	ai().script_engine().functor("leer_scr.bloodsucker_qte_hud_dis",functor);
 	functor(1);
 }
@@ -255,7 +255,7 @@ void CStateZombieVampireExecuteAbstract::execute_vampire_continue()
 	if (Actor()->HasInfo("bs_qte_done") && time_vampire_started < Device.dwTimeGlobal) {
 		cleanup();
 		
-		luabindex::functor<void> functor;
+		luabind::functor<void> functor;
 		ai().script_engine().functor("leer_scr.quick_kk",functor);
 		functor(1);
 		
