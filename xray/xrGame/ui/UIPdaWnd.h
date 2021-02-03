@@ -36,7 +36,7 @@ protected:
 //	CUIAnimatedStatic*		m_anim_static;
 	CUITextWnd*				m_clock;
 
-	// Текущий активный диалог
+	// Г’ГҐГЄГіГ№ГЁГ© Г ГЄГІГЁГўГ­Г»Г© Г¤ГЁГ Г«Г®ГЈ
 	CUIWindow*				m_pActiveDialog;
 	shared_str				m_sActiveSection;
 
@@ -83,8 +83,8 @@ public:
 
 			void			UpdatePda			();
 			void			UpdateRankingWnd	();
-			DECLARE_SCRIPT_REGISTER_FUNCTION
+	//		DECLARE_SCRIPT_REGISTER_FUNCTION
 };
-add_to_type_list(CUIPdaWnd)
-#undef script_type_list
-#define script_type_list save_type_list(CUIPdaWnd)
+//add_to_type_list(CUIPdaWnd)
+//#undef script_type_list
+//#define script_type_list save_type_list(CUIPdaWnd)
