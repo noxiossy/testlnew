@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-// script_game_object_inventory_owner.сpp :	функции для inventory owner
+// script_game_object_inventory_owner.Г±pp :	ГґГіГ­ГЄГ¶ГЁГЁ Г¤Г«Гї inventory owner
 //////////////////////////////////////////////////////////////////////////
 
 #include "pch_script.h"
@@ -358,7 +358,7 @@ void CScriptGameObject::MakeItemActive(CScriptGameObject* pItem)
 
 }
 
-//передаче вещи из своего инвентаря в инвентарь партнера
+//ГЇГҐГ°ГҐГ¤Г Г·ГҐ ГўГҐГ№ГЁ ГЁГ§ Г±ГўГ®ГҐГЈГ® ГЁГ­ГўГҐГ­ГІГ Г°Гї Гў ГЁГ­ГўГҐГ­ГІГ Г°Гј ГЇГ Г°ГІГ­ГҐГ°Г 
 void CScriptGameObject::TransferItem(CScriptGameObject* pItem, CScriptGameObject* pForWho)
 {
 	if (!pItem || !pForWho) {
@@ -373,13 +373,13 @@ void CScriptGameObject::TransferItem(CScriptGameObject* pItem, CScriptGameObject
 		return ;
 	}
 
-	// выбросить у себя 
+	// ГўГ»ГЎГ°Г®Г±ГЁГІГј Гі Г±ГҐГЎГї 
 	NET_Packet						P;
 	CGameObject::u_EventGen			(P,GE_TRADE_SELL, object().ID());
 	P.w_u16							(pIItem->object().ID());
 	CGameObject::u_EventSend		(P);
 
-	// отдать партнеру
+	// Г®ГІГ¤Г ГІГј ГЇГ Г°ГІГ­ГҐГ°Гі
 	CGameObject::u_EventGen			(P,GE_TRADE_BUY, pForWho->object().ID());
 	P.w_u16							(pIItem->object().ID());
 	CGameObject::u_EventSend		(P);
@@ -712,7 +712,7 @@ void  CScriptGameObject::SwitchToTrade		()
 {
 	CActor* pActor = smart_cast<CActor*>(&object());	if(!pActor) return;
 
-	//только если находимся в режиме single
+	//ГІГ®Г«ГјГЄГ® ГҐГ±Г«ГЁ Г­Г ГµГ®Г¤ГЁГ¬Г±Гї Гў Г°ГҐГ¦ГЁГ¬ГҐ single
 	CUIGameSP* pGameSP = smart_cast<CUIGameSP*>(CurrentGameUI());
 	if(!pGameSP) return;
 
@@ -726,7 +726,7 @@ void  CScriptGameObject::SwitchToUpgrade		()
 {
 	CActor* pActor = smart_cast<CActor*>(&object());	if(!pActor) return;
 
-	//только если находимся в режиме single
+	//ГІГ®Г«ГјГЄГ® ГҐГ±Г«ГЁ Г­Г ГµГ®Г¤ГЁГ¬Г±Гї Гў Г°ГҐГ¦ГЁГ¬ГҐ single
 	CUIGameSP* pGameSP = smart_cast<CUIGameSP*>(CurrentGameUI());
 	if(!pGameSP) return;
 
@@ -1528,4 +1528,13 @@ bool CScriptGameObject::is_door_blocked_by_npc					() const
 {
 	VERIFY2								( m_door, make_string("object %s hasn't been registered as a door already", m_game_object->cName().c_str()) );
 	return								ai().doors().is_door_blocked( m_door );
+}
+
+// Rietmon
+
+void CScriptGameObject::SetCharacterIcon(pcstr iconName)
+{
+    CInventoryOwner* pInventoryOwner = smart_cast<CInventoryOwner*>(&object());
+
+    return pInventoryOwner->SetIcon(iconName);
 }
