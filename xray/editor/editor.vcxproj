@@ -75,6 +75,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.hpp</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4947;4228;5205;</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <AdditionalDependencies>user32.lib;ole32.lib;gdi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
