@@ -61,6 +61,8 @@ public:
 		u32		nvdbt				: 1;
 
 		u32		nullrt				: 1;
+		
+        u32 	no_ram_textures 	: 1; // don't keep textures in RAM
 
 		u32		distortion			: 1;
 		u32		distortion_enabled	: 1;
@@ -262,7 +264,7 @@ public:
 	virtual void					add_StaticWallmark			(IWallMarkArray *pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V);
 	virtual void					add_StaticWallmark			(const wm_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* V);
 	virtual void					clear_static_wallmarks		();
-	virtual void					add_SkeletonWallmark		(intrusive_ptr<CSkeletonWallmark> wm);
+	virtual void					add_SkeletonWallmark		(const intrusive_ptr<CSkeletonWallmark> wm);
 	virtual void					add_SkeletonWallmark		(const Fmatrix* xf, CKinematics* obj, ref_shader& sh, const Fvector& start, const Fvector& dir, float size);
 	virtual void					add_SkeletonWallmark		(const Fmatrix* xf, IKinematics* obj, IWallMarkArray *pArray, const Fvector& start, const Fvector& dir, float size);
 

@@ -14,8 +14,8 @@ void dxApplicationRender::Copy(IApplicationRender &_in)
 void dxApplicationRender::LoadBegin()
 {
 	ll_hGeom.create		(FVF::F_TL, RCache.Vertex.Buffer(), RCache.QuadIB);
-	sh_progress.create	("hud\\default","ui\\ui_actor_loadgame_screen");
-	hLevelLogo_Add.create	("hud\\default","ui\\ui_actor_widescreen_sidepanels.dds");
+	sh_progress.create	("hud\\default","ui\\a_loadscreen");
+	hLevelLogo_Add.create	("hud\\default","ui\\a_widescreen_sidepanels.dds");	
 
 	ll_hGeom2.create		(FVF::F_TL, RCache.Vertex.Buffer(),NULL);
 }
@@ -94,52 +94,6 @@ void dxApplicationRender::load_draw_internal(CApplication &owner)
 	else
 		back_offset.set			(0.0f, 0.0f);
 
-	//progress bar
-	
-	back_tex_size.set			(506,4);
-	back_size.set				(506,4);
-	if(b_ws)
-		back_size.x				*= ws_k; //ws
-
-	back_tex_coords.lt.set		(0,772);
-	back_tex_coords.rb.add		(back_tex_coords.lt, back_tex_size);
-
-	back_coords.lt.set			(260,599);
-	if(b_ws)
-		back_coords.lt.x		*= ws_k;
-	back_coords.lt.add			(back_offset);
-
-	back_coords.rb.add			(back_coords.lt, back_size);
-	back_coords.lt.mul			(k);
-	back_coords.rb.mul			(k);
-
-	back_tex_coords.lt.x		/= tsz.x; 
-	back_tex_coords.lt.y		/= tsz.y; 
-	back_tex_coords.rb.x		/= tsz.x; 
-	back_tex_coords.rb.y		/= tsz.y;
-
-	u32	Offset;
-	u32	C						= 0xffffffff;
-	FVF::TL* pv					= NULL;
-	u32 v_cnt					= 40;
-	pv							= (FVF::TL*)RCache.Vertex.Lock	(2*(v_cnt+1),ll_hGeom2.stride(),Offset);
-	FVF::TL* _pv				= pv;
-	float pos_delta				= back_coords.width()/v_cnt;
-	float tc_delta				= back_tex_coords.width()/v_cnt;
-	u32 clr = C;
-
-	for(u32 idx=0; idx<v_cnt+1; ++idx)
-	{
-		clr =					calc_progress_color						(idx,v_cnt,owner.load_stage,owner.max_load_stage);
-		pv->set					(back_coords.lt.x+pos_delta*idx+offs,	back_coords.rb.y+offs,	0+EPS_S, 1, clr, back_tex_coords.lt.x+tc_delta*idx,	back_tex_coords.rb.y);	pv++;
-		pv->set					(back_coords.lt.x+pos_delta*idx+offs,	back_coords.lt.y+offs,	0+EPS_S, 1, clr, back_tex_coords.lt.x+tc_delta*idx,	back_tex_coords.lt.y);	pv++;
-	}
-	VERIFY						(u32(pv-_pv)==2*(v_cnt+1));
-	RCache.Vertex.Unlock		(2*(v_cnt+1),ll_hGeom2.stride());
-
-	RCache.set_Shader			(sh_progress);
-	RCache.set_Geometry			(ll_hGeom2);
-	RCache.Render				(D3DPT_TRIANGLESTRIP, Offset, 2*v_cnt);
 
 	//background picture
 
@@ -199,23 +153,6 @@ void dxApplicationRender::load_draw_internal(CApplication &owner)
 		draw_face					(hLevelLogo_Add, back_coords, back_tex_coords, tsz);
 	}
 
-
-	// Draw title
-	VERIFY							(owner.pFontSystem);
-	owner.pFontSystem->Clear		();
-	owner.pFontSystem->SetColor		(color_rgba(103,103,103,255));
-	owner.pFontSystem->SetAligment	(CGameFont::alCenter);
-	back_size.set					(_w/2,622.0f*k.y);
-	owner.pFontSystem->OutSet		(back_size.x, back_size.y);
-	owner.pFontSystem->OutNext		(owner.ls_header);
-	owner.pFontSystem->OutNext		("");
-	owner.pFontSystem->OutNext		(owner.ls_tip_number);
-
-	float fTargetWidth				= 600.0f*k.x*(b_ws?0.8f:1.0f);
-	draw_multiline_text				(owner.pFontSystem, fTargetWidth, owner.ls_tip);
-
-	owner.pFontSystem->OnRender		();
-
 	//draw level-specific screenshot
 	if(hLevelLogo)
 	{
@@ -242,6 +179,72 @@ void dxApplicationRender::load_draw_internal(CApplication &owner)
 
 		draw_face					(hLevelLogo, r, logo_tex_coords, Fvector2().set(1,1));
 	}
+	
+	//progress bar
+
+	back_tex_size.set			(357,30);
+	back_size.set				(357,30);
+	back_tex_coords.lt.set		(1,780);
+	back_coords.lt.set			(330,585);
+		
+	if(b_ws)
+		back_size.x				*= ws_k; //ws
+
+
+	back_tex_coords.rb.add		(back_tex_coords.lt, back_tex_size);
+
+	if(b_ws)
+		back_coords.lt.x		*= ws_k;
+	back_coords.lt.add			(back_offset);
+
+	back_coords.rb.add			(back_coords.lt, back_size);
+	back_coords.lt.mul			(k);
+	back_coords.rb.mul			(k);
+
+	back_tex_coords.lt.x		/= tsz.x; 
+	back_tex_coords.lt.y		/= tsz.y; 
+	back_tex_coords.rb.x		/= tsz.x; 
+	back_tex_coords.rb.y		/= tsz.y;
+
+	u32	Offset;
+	u32	C						= 0xffffffff;
+	FVF::TL* pv					= NULL;
+	u32 v_cnt					= 40;
+	pv							= (FVF::TL*)RCache.Vertex.Lock	(2*(v_cnt+1),ll_hGeom2.stride(),Offset);
+	FVF::TL* _pv				= pv;
+	float pos_delta				= back_coords.width()/v_cnt;
+	float tc_delta				= back_tex_coords.width()/v_cnt;
+	u32 clr = C;
+
+	for(u32 idx=0; idx<v_cnt+1; ++idx)
+	{
+		clr =					calc_progress_color						(idx,v_cnt,owner.load_stage,owner.max_load_stage);
+		pv->set					(back_coords.lt.x+pos_delta*idx+offs,	back_coords.rb.y+offs,	0+EPS_S, 1, clr, back_tex_coords.lt.x+tc_delta*idx,	back_tex_coords.rb.y);	pv++;
+		pv->set					(back_coords.lt.x+pos_delta*idx+offs,	back_coords.lt.y+offs,	0+EPS_S, 1, clr, back_tex_coords.lt.x+tc_delta*idx,	back_tex_coords.lt.y);	pv++;
+	}
+	VERIFY						(u32(pv-_pv)==2*(v_cnt+1));
+	RCache.Vertex.Unlock		(2*(v_cnt+1),ll_hGeom2.stride());
+
+	RCache.set_Shader			(sh_progress);
+	RCache.set_Geometry			(ll_hGeom2);
+	RCache.Render				(D3DPT_TRIANGLESTRIP, Offset, 2*v_cnt);
+	
+	// Draw title
+	VERIFY							(owner.pFontSystem);
+	owner.pFontSystem->Clear		();
+	
+	owner.pFontSystem->SetColor		(color_rgba(103,103,103,255));
+	owner.pFontSystem->SetAligment	(CGameFont::alCenter);
+	back_size.set					(_w/2,622.0f*k.y);	
+	owner.pFontSystem->OutSet		(back_size.x, back_size.y);
+	owner.pFontSystem->OutNext		(owner.ls_header);
+	owner.pFontSystem->OutNext		("");
+	owner.pFontSystem->OutNext		(owner.ls_tip_number);
+	float fTargetWidth				= 600.0f*k.x*(b_ws?0.8f:1.0f);
+	draw_multiline_text				(owner.pFontSystem, fTargetWidth, owner.ls_tip);
+
+	owner.pFontSystem->OnRender		();
+
 }
 
 void dxApplicationRender::draw_face(ref_shader& sh, Frect& coords, Frect& tex_coords, const Fvector2& tsz)

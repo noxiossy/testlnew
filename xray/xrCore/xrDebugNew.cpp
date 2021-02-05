@@ -196,9 +196,12 @@ void xrDebug::backend	(const char *expression, const char *description, const ch
 	MessageBox			(NULL,assertion_info,"X-Ray error",MB_OK|MB_ICONERROR|MB_SYSTEMMODAL);
 #else
 #	ifdef USE_OWN_ERROR_MESSAGE_WINDOW
+		HWND wnd = GetActiveWindow();
+		ShowWindow(wnd, SW_MINIMIZE);
+		while (ShowCursor(TRUE) < 0);
 		int					result = 
 			MessageBox(
-				GetTopWindow(NULL),
+				wnd,
 				assertion_info,
 				"Fatal Error",
 				MB_CANCELTRYCONTINUE|MB_ICONERROR|MB_SYSTEMMODAL
@@ -225,6 +228,7 @@ void xrDebug::backend	(const char *expression, const char *description, const ch
 				Msg("! xrDebug::backend MessageBox error[%d] GetLastError=[%lu]", result, GetLastError());
 			}
 		}
+		ShowCursor(FALSE);
 #	else // USE_OWN_ERROR_MESSAGE_WINDOW
 #		ifdef USE_BUG_TRAP
 			BT_SetUserMessage	(assertion_info);
@@ -373,7 +377,7 @@ void SetupExceptionHandler	(const bool &dedicated)
 {
 	BT_InstallSehFilter		();
 #if 1//ndef USE_OWN_ERROR_MESSAGE_WINDOW
-	if (!dedicated && !strstr(GetCommandLine(),"-silent_error_mode"))
+	if (!dedicated && (!strstr(GetCommandLine(),"-silent_error_mode")) || (!strstr(GetCommandLine(),"-lr_dev")))//LR_DEV
 		BT_SetActivityType	(BTA_SHOWUI);
 	else
 		BT_SetActivityType	(BTA_SAVEREPORT);

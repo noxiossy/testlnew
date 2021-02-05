@@ -87,11 +87,76 @@ CDetailManager::CDetailManager	()
 	m_time_rot_2 = 0;
 	m_time_pos	= 0;
 	m_global_time_old = 0;
+	
+
+	// KD: variable detail radius
+	dm_size = dm_current_size;
+	dm_cache_line = dm_current_cache_line;
+	dm_cache1_line = dm_current_cache1_line;
+	dm_cache_size = dm_current_cache_size;
+	dm_fade = dm_current_fade;
+	ps_r__Detail_density = ps_current_detail_density;
+    ps_current_detail_height = ps_r__Detail_height;
+	cache_level1 = (CacheSlot1**)Memory.mem_alloc(dm_cache1_line * sizeof(CacheSlot1*)
+#ifdef USE_MEMORY_MONITOR
+		, "CDetailManager::cache_level1"
+#endif
+	);
+	for (u32 i = 0; i < dm_cache1_line; ++i)
+	{
+		cache_level1[i] = (CacheSlot1*)Memory.mem_alloc(dm_cache1_line * sizeof(CacheSlot1)
+#ifdef USE_MEMORY_MONITOR
+			, "CDetailManager::cache_level1 " + i
+#endif
+		);
+		for (u32 j = 0; j < dm_cache1_line; ++j)
+			new (&(cache_level1[i][j])) CacheSlot1();
+	}
+
+	cache = (Slot***)Memory.mem_alloc(dm_cache_line * sizeof(Slot**)
+#ifdef USE_MEMORY_MONITOR
+		, "CDetailManager::cache"
+#endif
+	);
+	for (u32 i = 0; i < dm_cache_line; ++i)
+		cache[i] = (Slot**)Memory.mem_alloc(dm_cache_line * sizeof(Slot*)
+#ifdef USE_MEMORY_MONITOR
+			, "CDetailManager::cache " + i
+#endif		
+		);
+
+	cache_pool = (Slot *)Memory.mem_alloc(dm_cache_size * sizeof(Slot)
+#ifdef USE_MEMORY_MONITOR
+		, "CDetailManager::cache_pool"
+#endif
+	);
+	for (u32 i = 0; i < dm_cache_size; ++i)
+	new (&(cache_pool[i])) Slot();
 }
 
 CDetailManager::~CDetailManager	()
 {
+    if (dtFS)
+    {
+        FS.r_close(dtFS);
+        dtFS = 0;
+    }
 
+	for (u32 i = 0; i < dm_cache_size; ++i)
+		cache_pool[i].~Slot();
+	Memory.mem_free(cache_pool);
+
+	for (u32 i = 0; i < dm_cache_line; ++i)
+		Memory.mem_free(cache[i]);
+	Memory.mem_free(cache);
+
+	for (u32 i = 0; i < dm_cache1_line; ++i)
+	{
+		for (u32 j = 0; j < dm_cache1_line; ++j)
+			cache_level1[i][j].~CacheSlot1();
+		Memory.mem_free(cache_level1[i]);
+	}
+	Memory.mem_free(cache_level1);
 }
 /*
 */
@@ -181,16 +246,24 @@ void CDetailManager::Unload		()
 	m_visibles[1].clear	();
 	m_visibles[2].clear	();
 	FS.r_close			(dtFS);
+	dtFS 				= 0;
 }
 
 extern ECORE_API float r_ssaDISCARD;
 
 void CDetailManager::UpdateVisibleM()
 {
+	// Clean up
+	for (auto& vec : m_visibles)
+		for (auto& vis : vec)
+			vis.clear_not_free();
+
 	Fvector		EYE				= RDEVICE.vCameraPosition_saved;
 
 	CFrustum	View;
-	View.CreateFromMatrix		(RDEVICE.mFullTransform_saved, FRUSTUM_P_LRTB + FRUSTUM_P_FAR);
+	//	View.CreateFromMatrix		(Device.mFullTransform, FRUSTUM_P_LRTB + FRUSTUM_P_FAR);
+	/* KD: there is some bug: frustrum created from full transform matrix seems to be broken in some frames, so we should use saved frustrum from render interface*/
+	View = RImplementation.ViewBase;
 	
  	CFrustum	View_old;
  	Fmatrix		Viewm_old = RDEVICE.mFullTransform;
@@ -204,8 +277,8 @@ void CDetailManager::UpdateVisibleM()
 	// Initialize 'vis' and 'cache'
 	// Collect objects for rendering
 	RDEVICE.Statistic->RenderDUMP_DT_VIS.Begin	();
-	for (int _mz=0; _mz<dm_cache1_line; _mz++){
-		for (int _mx=0; _mx<dm_cache1_line; _mx++){
+	for (u32 _mz=0; _mz<dm_cache1_line; _mz++){
+		for (u32 _mx=0; _mx<dm_cache1_line; _mx++){
 			CacheSlot1& MS		= cache_level1[_mz][_mx];
 			if (MS.empty)
 			{
@@ -221,7 +294,7 @@ void CDetailManager::UpdateVisibleM()
 			
 			u32 dwCC = dm_cache1_count*dm_cache1_count;
 
-			for (int _i=0; _i < dwCC ; _i++){
+			for (u32 _i=0; _i < dwCC ; _i++){
 				Slot*	PS		= *MS.slots[_i];
 				Slot& 	S 		= *PS;
 

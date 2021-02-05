@@ -224,6 +224,10 @@ void					CRender::create					()
 	o.nvdbt				= HW.support	((D3DFORMAT)MAKEFOURCC('N','V','D','B'), D3DRTYPE_SURFACE, 0);
 	if (o.nvdbt)		Msg	("* NV-DBT supported and used");
 
+    o.no_ram_textures = (strstr(Core.Params, "-noramtex")) ? TRUE : ps_r__common_flags.test(RFLAG_NO_RAM_TEXTURES);
+    if (o.no_ram_textures)
+        Msg("* Managed textures disabled");
+
 	// options (smap-pool-size)
 	if (r2_SmapSize >= 1024 && r2_SmapSize <= 4096)
 		o.smapsize = r2_SmapSize;
@@ -335,6 +339,15 @@ void CRender::reset_begin()
 		Lights_LastFrame.clear	();
 	}
 
+	//reset_frame = Device.dwFrame;
+	//AVO: let's reload details while changed details options on vid_restart
+	if (b_loaded && ((dm_current_size != dm_size) || (ps_r__Detail_density != ps_current_detail_density)))
+	{
+		Details->Unload();
+		xr_delete(Details);
+	}
+	//-AVO
+
 	xr_delete					(Target);
 	HWOCC.occq_destroy			();
 	//_RELEASE					(q_sync_point[1]);
@@ -352,6 +365,14 @@ void CRender::reset_end()
 	HWOCC.occq_create			(occq_size);
 
 	Target						=	xr_new<CRenderTarget>	();
+
+	//AVO: let's reload details while changed details options on vid_restart
+	if (b_loaded && ((dm_current_size != dm_size) || (ps_r__Detail_density != ps_current_detail_density)))
+	{
+		Details = xr_new<CDetailManager>();
+		Details->Load();
+	}
+	//-AVO
 
 	xrRender_apply_tf			();
 
