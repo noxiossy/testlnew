@@ -62,7 +62,15 @@ void  dxRenderDeviceRender::Reset( HWND hWnd, u32 &dwWidth, u32 &dwHeight, float
 
 	Resources->reset_begin	();
 	Memory.mem_compact		();
+	
+    const bool noTexturesInRAM = RImplementation.o.no_ram_textures;
+    if (noTexturesInRAM)
+        ResourcesDeferredUnload();
+
 	HW.Reset				(hWnd);
+
+    if (noTexturesInRAM)
+        ResourcesDeferredUpload();
 
 #if defined(USE_DX10) || defined(USE_DX11)
 	dwWidth					= HW.m_ChainDesc.BufferDesc.Width;
@@ -242,6 +250,11 @@ void dxRenderDeviceRender::DeferredLoad(BOOL E)
 void dxRenderDeviceRender::ResourcesDeferredUpload()
 {
 	Resources->DeferredUpload();
+}
+
+void dxRenderDeviceRender::ResourcesDeferredUnload()
+{
+    Resources->DeferredUnload();
 }
 
 void dxRenderDeviceRender::ResourcesGetMemoryUsage(u32& m_base, u32& c_base, u32& m_lmaps, u32& c_lmaps)
