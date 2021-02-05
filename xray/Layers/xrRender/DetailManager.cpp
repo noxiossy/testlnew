@@ -139,7 +139,7 @@ CDetailManager::~CDetailManager	()
     if (dtFS)
     {
         FS.r_close(dtFS);
-        dtFS = 0;
+		dtFS = NULL;
     }
 
 	for (u32 i = 0; i < dm_cache_size; ++i)
@@ -246,7 +246,7 @@ void CDetailManager::Unload		()
 	m_visibles[1].clear	();
 	m_visibles[2].clear	();
 	FS.r_close			(dtFS);
-	dtFS 				= 0;
+	dtFS = NULL;
 }
 
 extern ECORE_API float r_ssaDISCARD;
@@ -386,8 +386,10 @@ void CDetailManager::UpdateVisibleM()
 void CDetailManager::Render	()
 {
 #ifndef _EDITOR
-	if (0==dtFS)						return;
-	if (!psDeviceFlags.is(rsDetails))	return;
+	if (!RImplementation.Details) return;	// possibly deleted
+	if (!dtFS) return;
+	if (!psDeviceFlags.is(rsDetails)) return;
+	if (g_pGamePersistent && g_pGamePersistent->m_pMainMenu && g_pGamePersistent->m_pMainMenu->IsActive()) return;
 #endif
 
 	// MT
@@ -411,12 +413,15 @@ void CDetailManager::Render	()
 	m_frame_rendered		= RDEVICE.dwFrame;
 }
 
+u32 reset_frame = 0;
 void __stdcall	CDetailManager::MT_CALC		()
 {
 #ifndef _EDITOR
-	if (0==RImplementation.Details)		return;	// possibly deleted
-	if (0==dtFS)						return;
-	if (!psDeviceFlags.is(rsDetails))	return;
+	if (reset_frame == Device.dwFrame) return;
+	if (!RImplementation.Details) return;	// possibly deleted
+	if (!dtFS) return;
+	if (!psDeviceFlags.is(rsDetails)) return;
+	if (g_pGamePersistent && g_pGamePersistent->m_pMainMenu && g_pGamePersistent->m_pMainMenu->IsActive()) return;
 #endif    
 
 	MT.Enter					();
