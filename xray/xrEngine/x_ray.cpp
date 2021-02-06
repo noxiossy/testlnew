@@ -9,8 +9,6 @@
 #include "igame_level.h"
 #include "igame_persistent.h"
 
-#include "dedicated_server_only.h"
-#include "no_single.h"
 #include "../xrNetServer/NET_AuthCheck.h"
 
 #include "xr_input.h"
@@ -60,15 +58,13 @@ static int start_year	= 1999;	// 1999
 
 // binary hash, mainly for copy-protection
 
-#ifndef DEDICATED_SERVER
-
 #include "../xrGameSpy/gamespy/md5c.c"
 #include <ctype.h>
 
 #define DEFAULT_MODULE_HASH "3CAABCFCFF6F3A810019C6A72180F166"
 static char szEngineHash[33] = DEFAULT_MODULE_HASH;
 
-PROTECT_API char * ComputeModuleHash( char * pszHash )
+char * ComputeModuleHash( char * pszHash )
 {
 	char szModuleFileName[ MAX_PATH ];
 	HANDLE hModuleHandle = NULL , hFileMapping = NULL;
@@ -116,7 +112,6 @@ PROTECT_API char * ComputeModuleHash( char * pszHash )
 	
 	return pszHash;
 }
-#endif // DEDICATED_SERVER
 
 void compute_build_id	()
 {
@@ -200,11 +195,9 @@ struct path_excluder_predicate
 	xr_auth_strings_t const *	m_ignore;
 };
 
-PROTECT_API void InitSettings	()
+void InitSettings	()
 {
-	#ifndef DEDICATED_SERVER
-		Msg( "EH: %s\n" , ComputeModuleHash( szEngineHash ) );
-	#endif // DEDICATED_SERVER
+	Msg( "EH: %s\n" , ComputeModuleHash( szEngineHash ) );
 
 	string_path					fname; 
 	FS.update_path				(fname,"$game_config$","system.ltx");
@@ -234,19 +227,11 @@ PROTECT_API void InitSettings	()
 	pGameIni					= xr_new<CInifile>	(fname,TRUE);
 	CHECK_OR_EXIT				(0!=pGameIni->section_count(), make_string("Cannot find file %s.\nReinstalling application may fix this problem.",fname));
 }
-PROTECT_API void InitConsole	()
+void InitConsole	()
 {
-
-#ifdef DEDICATED_SERVER
-	{
-		Console						= xr_new<CTextConsole>	();		
-	}
-#else
-	//	else
 	{
 		Console						= xr_new<CConsole>	();
 	}
-#endif
 	Console->Initialize			( );
 
 	xr_strcpy						(Console->ConfigFile,"user.ltx");
@@ -258,7 +243,7 @@ PROTECT_API void InitConsole	()
 
 }
 
-PROTECT_API void InitInput		()
+void InitInput		()
 {
 	BOOL bCaptureInput			= !strstr(Core.Params,"-i");
 
@@ -269,12 +254,12 @@ void destroyInput	()
 	xr_delete					( pInput		);
 }
 
-PROTECT_API void InitSound1		()
+void InitSound1		()
 {
 	CSound_manager_interface::_create				(0);
 }
 
-PROTECT_API void InitSound2		()
+void InitSound2		()
 {
 	CSound_manager_interface::_create				(1);
 }
@@ -352,10 +337,8 @@ void Startup()
 	}
 
 	// Initialize APP
-//#ifndef DEDICATED_SERVER
 	ShowWindow( Device.m_hWnd , SW_SHOWNORMAL );
 	Device.Create				( );
-//#endif
 	LALib.OnCreate				( );
 	pApp						= xr_new<CApplication>	();
 	g_pGamePersistent			= (IGame_Persistent*)	NEW_INSTANCE (CLSID_GAME_PERSISTANT);
@@ -581,7 +564,7 @@ struct damn_keys_filter {
 #undef dwFilterKeysStructSize
 #undef dwToggleKeysStructSize
 
-// Ôóíöèÿ äëÿ òóïûõ òðåáîâàíèé THQ è òóïûõ àìåðèêàíñêèõ ïîëüçîâàòåëåé
+// Ã”Ã³Ã­Ã¶Ã¨Ã¿ Ã¤Ã«Ã¿ Ã²Ã³Ã¯Ã»Ãµ Ã²Ã°Ã¥Ã¡Ã®Ã¢Ã Ã­Ã¨Ã© THQ Ã¨ Ã²Ã³Ã¯Ã»Ãµ Ã Ã¬Ã¥Ã°Ã¨ÃªÃ Ã­Ã±ÃªÃ¨Ãµ Ã¯Ã®Ã«Ã¼Ã§Ã®Ã¢Ã Ã²Ã¥Ã«Ã¥Ã©
 BOOL IsOutOfVirtualMemory()
 {
 #define VIRT_ERROR_SIZE 256
@@ -603,7 +586,7 @@ BOOL IsOutOfVirtualMemory()
 	dwPageFileInMB = ( DWORD ) ( statex.ullTotalPageFile / ( 1024 * 1024 ) ) ;
 	dwPhysMemInMB = ( DWORD ) ( statex.ullTotalPhys / ( 1024 * 1024 ) ) ;
 
-	// Äîâîëüíî îòôîíàðíîå óñëîâèå
+	// Ã„Ã®Ã¢Ã®Ã«Ã¼Ã­Ã® Ã®Ã²Ã´Ã®Ã­Ã Ã°Ã­Ã®Ã¥ Ã³Ã±Ã«Ã®Ã¢Ã¨Ã¥
 	if ( ( dwPhysMemInMB > 500 ) && ( ( dwPageFileInMB + dwPhysMemInMB ) > 2500  ) )
 		return 0;
 
@@ -671,11 +654,7 @@ int APIENTRY WinMain_impl(HINSTANCE hInstance,
                      char *    lpCmdLine,
                      int       nCmdShow)
 {
-#ifdef DEDICATED_SERVER
-	Debug._initialize			(true);
-#else // DEDICATED_SERVER
 	Debug._initialize			(false);
-#endif // DEDICATED_SERVER
 
 	if (!IsDebuggerPresent()) {
 
@@ -701,8 +680,6 @@ int APIENTRY WinMain_impl(HINSTANCE hInstance,
 	}
 
 //	foo();
-#ifndef DEDICATED_SERVER
-
 	// Check for virtual memory
 	if ( ( strstr( lpCmdLine , "--skipmemcheck" ) == NULL ) && IsOutOfVirtualMemory() )
 		return 0;
@@ -725,9 +702,6 @@ int APIENTRY WinMain_impl(HINSTANCE hInstance,
 		return 1;
 	}
 #endif
-#else // DEDICATED_SERVER
-	g_dedicated_server			= true;
-#endif // DEDICATED_SERVER
 
 	SetThreadAffinityMask		(GetCurrentThread(),1);
 
@@ -781,11 +755,9 @@ int APIENTRY WinMain_impl(HINSTANCE hInstance,
 			xr_strcpy( Core.CompName , sizeof( Core.CompName ) , "Computer" );
 	}
 
-#ifndef DEDICATED_SERVER
 	{
 		damn_keys_filter		filter;
 		(void)filter;
-#endif // DEDICATED_SERVER
 
 		FPU::m24r				();
 		InitEngine				();
@@ -826,7 +798,6 @@ int APIENTRY WinMain_impl(HINSTANCE hInstance,
 				return 0;
 		};
 
-#ifndef DEDICATED_SERVER
 		if(strstr(Core.Params,"-r2a"))	
 			Console->Execute			("renderer renderer_r2a");
 		else
@@ -838,9 +809,7 @@ int APIENTRY WinMain_impl(HINSTANCE hInstance,
 			pTmp->Execute				(Console->ConfigFile);
 			xr_delete					(pTmp);
 		}
-#else
-			Console->Execute			("renderer renderer_r1");
-#endif
+
 //.		InitInput					( );
 		Engine.External.Initialize	( );
 		Console->Execute			("stat_memory");
@@ -863,14 +832,12 @@ int APIENTRY WinMain_impl(HINSTANCE hInstance,
 				temp_wf, &si, &pi);
 
 		}
-#ifndef DEDICATED_SERVER
 #ifdef NO_MULTI_INSTANCES		
 		// Delete application presence mutex
 		CloseHandle( hCheckPresenceMutex );
 #endif
 	}
 	// here damn_keys_filter class instanse will be destroyed
-#endif // DEDICATED_SERVER
 
 	return						0;
 }
@@ -1153,11 +1120,10 @@ void CApplication::LoadBegin	()
 
 		g_appLoaded			= FALSE;
 
-#ifndef DEDICATED_SERVER
 		_InitializeFont		(pFontSystem,"ui_font_letterica18_russian",0);
 
 		m_pRender->LoadBegin();
-#endif
+
 		phase_timer.Start	();
 		load_stage			= 0;
 	}
@@ -1185,7 +1151,7 @@ void CApplication::destroy_loading_shaders()
 
 //u32 calc_progress_color(u32, u32, int, int);
 
-PROTECT_API void CApplication::LoadDraw		()
+void CApplication::LoadDraw		()
 {
 	if(g_appLoaded)				return;
 	Device.dwFrame				+= 1;
@@ -1193,10 +1159,7 @@ PROTECT_API void CApplication::LoadDraw		()
 
 	if(!Device.Begin () )		return;
 
-	if	(g_dedicated_server)
-		Console->OnRender			();
-	else
-		load_draw_internal			();
+	load_draw_internal			();
 
 	Device.End					();
 }
