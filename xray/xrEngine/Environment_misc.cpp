@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#pragma hdrstop
 
 #include "Environment.h"
 #include "xr_efflensflare.h"
@@ -9,8 +8,6 @@
 #include "IGame_Level.h"
 #include "../xrServerEntities/object_broker.h"
 #include "../xrServerEntities/LevelGameDef.h"
-
-#include "securom_api.h"
 
 void CEnvModifier::load	(IReader* fs, u32 version)
 {
@@ -539,8 +536,6 @@ void	CEnvironment::mods_unload		()
 
 void    CEnvironment::load_level_specific_ambients ()
 {
-	SECUROM_MARKER_PERFORMANCE_ON(13)
-
 	const shared_str level_name = g_pGameLevel->name();
 
 	string_path path;
@@ -573,8 +568,6 @@ void    CEnvironment::load_level_specific_ambients ()
 	}
 
 	xr_delete(level_ambients);
-
-	SECUROM_MARKER_PERFORMANCE_OFF(13)
 }
 
 CEnvDescriptor* CEnvironment::create_descriptor	(shared_str const& identifier, CInifile* config)
