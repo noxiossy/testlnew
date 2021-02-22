@@ -55,8 +55,8 @@ void window_view::reclip_cursor					()
 	if (EditButton->Checked)
 		return;
 
-	//if (!m_loaded)
-	//	return;
+	if (!m_loaded)
+		return;
 
 	while (ShowCursor(FALSE) >= 0);
 
