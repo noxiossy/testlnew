@@ -329,19 +329,20 @@ void CUIHudStatesWnd::UpdateIndicatorIcons( CActor* actor )
 	}
 
 	// OVERWEIGHT ICON
+	bool b_God = GodMode();
 	float cur_weight = actor->inventory().TotalWeight();
 	float max_weight = actor->MaxWalkWeight();
 	float dif_weight = (cur_weight/max_weight);
 	u32 a_weight = (u32)( (1 - pow((1-dif_weight),3) ) * 255);
 	u32 a_reverse_weight = (u32)( (1 - pow(dif_weight,3) ) * 255);
-	if (cur_weight>=max_weight)
+	if (cur_weight>=max_weight && !b_God)
 	{
 		a_weight = 255;
 		a_reverse_weight = 0;
 	}
 	m_ind_overweight->SetTextureColor(color_rgba(a_weight,a_reverse_weight,0,255)); 
 	m_ind_overweight->Show(false);
-	if(cur_weight>=max_weight-15.0f)
+	if(cur_weight>=max_weight-15.0f && !b_God)
 	{
 		m_ind_overweight->Show(true);
 
@@ -627,12 +628,12 @@ void CUIHudStatesWnd::UpdateZones()
 			if ( dist_to_zone < rad_zone )
 			{
 				fRelPow *= 0.3f;
-				fRelPow *= ( 2.5f - 2.0f * power ); // çâóê çàâèñèò îò ñèëû çîíû
+				fRelPow *= ( 2.5f - 2.0f * power ); // Ã§Ã¢Ã³Ãª Ã§Ã Ã¢Ã¨Ã±Ã¨Ã² Ã®Ã² Ã±Ã¨Ã«Ã» Ã§Ã®Ã­Ã»
 			}
 		}
 		clamp( fRelPow, 0.0f, 1.0f );
 
-		//îïðåäåëèòü òåêóùóþ ÷àñòîòó ñðàáàòûâàíèÿ ñèãíàëà
+		//Ã®Ã¯Ã°Ã¥Ã¤Ã¥Ã«Ã¨Ã²Ã¼ Ã²Ã¥ÃªÃ³Ã¹Ã³Ã¾ Ã·Ã Ã±Ã²Ã®Ã²Ã³ Ã±Ã°Ã Ã¡Ã Ã²Ã»Ã¢Ã Ã­Ã¨Ã¿ Ã±Ã¨Ã£Ã­Ã Ã«Ã 
 		zone_info.cur_period = zone_type->freq.x + (zone_type->freq.y - zone_type->freq.x) * (fRelPow * fRelPow);
 		
 		//string256	buff_z;
