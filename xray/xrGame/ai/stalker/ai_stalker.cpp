@@ -110,7 +110,7 @@ void CAI_Stalker::reinit			()
 	animation().reinit				();
 //	movement().reinit				();
 
-	//загрузка спецевической звуковой схемы для сталкера согласно m_SpecificCharacter
+	//Г§Г ГЈГ°ГіГ§ГЄГ  Г±ГЇГҐГ¶ГҐГўГЁГ·ГҐГ±ГЄГ®Г© Г§ГўГіГЄГ®ГўГ®Г© Г±ГµГҐГ¬Г» Г¤Г«Гї Г±ГІГ Г«ГЄГҐГ°Г  Г±Г®ГЈГ«Г Г±Г­Г® m_SpecificCharacter
 	sound().sound_prefix			(SpecificCharacter().sound_voice_prefix());
 
 #ifdef DEBUG_MEMORY_MANAGER
@@ -472,7 +472,7 @@ void CAI_Stalker::Die				(CObject* who)
 
 	if(m_death_sound_enabled)
 	{
-		sound().set_sound_mask		((u32)eStalkerSoundMaskDie);
+		//sound().set_sound_mask		((u32)eStalkerSoundMaskDie);
 		if (is_special_killer(who))
 			sound().play			(eStalkerSoundDieInAnomaly);
 		else
@@ -483,7 +483,7 @@ void CAI_Stalker::Die				(CObject* who)
 
 	inherited::Die					(who);
 	
-	//запретить использование слотов в инвенторе
+	//Г§Г ГЇГ°ГҐГІГЁГІГј ГЁГ±ГЇГ®Г«ГјГ§Г®ГўГ Г­ГЁГҐ Г±Г«Г®ГІГ®Гў Гў ГЁГ­ГўГҐГ­ГІГ®Г°ГҐ
 	inventory().SetSlotsUseful		(false);
 
 	if (inventory().GetActiveSlot() == NO_ACTIVE_SLOT)
@@ -588,7 +588,7 @@ BOOL CAI_Stalker::net_Spawn			(CSE_Abstract* DC)
 	if (!g_Alive())
 		sound().set_sound_mask(u32(eStalkerSoundMaskDie));
 
-	//загрузить иммунитеты из модельки сталкера
+	//Г§Г ГЈГ°ГіГ§ГЁГІГј ГЁГ¬Г¬ГіГ­ГЁГІГҐГІГ» ГЁГ§ Г¬Г®Г¤ГҐГ«ГјГЄГЁ Г±ГІГ Г«ГЄГҐГ°Г 
 	IKinematics* pKinematics = smart_cast<IKinematics*>(Visual()); VERIFY(pKinematics);
 	CInifile* ini = pKinematics->LL_UserData();
 	if(ini)
@@ -605,7 +605,7 @@ BOOL CAI_Stalker::net_Spawn			(CSE_Abstract* DC)
 		}
 	}
 
-	//вычислить иммунета в зависимости от ранга
+	//ГўГ»Г·ГЁГ±Г«ГЁГІГј ГЁГ¬Г¬ГіГ­ГҐГІГ  Гў Г§Г ГўГЁГ±ГЁГ¬Г®Г±ГІГЁ Г®ГІ Г°Г Г­ГЈГ 
 	static float novice_rank_immunity			= pSettings->r_float("ranks_properties", "immunities_novice_k");
 	static float expirienced_rank_immunity		= pSettings->r_float("ranks_properties", "immunities_experienced_k");
 
